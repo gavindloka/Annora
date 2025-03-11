@@ -4,8 +4,7 @@ import 'package:annora_survey/widgets/top_bar.dart';
 import 'package:flutter/material.dart';
 
 class NewTaskPage extends StatefulWidget {
-  final String username;
-  const NewTaskPage({super.key, required this.username});
+  const NewTaskPage({super.key});
 
   @override
   State<NewTaskPage> createState() => _NewTaskPageState();
@@ -15,7 +14,6 @@ class _NewTaskPageState extends State<NewTaskPage> {
   @override
   Widget build(BuildContext context) {
     return (Scaffold(
-      appBar: TopBar(username: widget.username),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -61,7 +59,6 @@ class _NewTaskPageState extends State<NewTaskPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const BottomBar(),
     ));
   }
 }
