@@ -28,10 +28,13 @@ class _LoginPageState extends State<LoginPage> {
     if (result['success']) {
       print(result['data']);
       String username = result['data'].name;
+      String email = result['data'].email;
+      String phone = result['data'].phone;
+      String regional = result['data'].region;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MainPage(username: username,),
+          builder: (context) => MainPage(username: username, email: email, phone:phone, regional: regional),
         ),
       );
     } else {

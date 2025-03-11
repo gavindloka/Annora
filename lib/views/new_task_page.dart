@@ -19,15 +19,9 @@ class _NewTaskPageState extends State<NewTaskPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.only(left: 15),
-              child: Text(
-                "New Task",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            Text(
+              "New Task",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             Expanded(
               child: ListView(
