@@ -1,5 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 class Task {
+  int projectID;
+  int woID;
   DateTime startDate;
   DateTime targetDate;
   String nameProject;
@@ -13,6 +15,8 @@ class Task {
   int progress;
   String status;
   Task({
+    required this.projectID,
+    required this.woID,
     required this.startDate,
     required this.targetDate,
     required this.nameProject,

@@ -29,7 +29,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     pages = [
-      const NewTaskPage(),
+      NewTaskPage(email: widget.email),
       const HistoryTaskPage(),
       AccountPage(
         username: widget.username,
@@ -39,6 +39,7 @@ class _MainPageState extends State<MainPage> {
       ),
     ];
   }
+
   void _onItemTapped(int index) {
     setState(() {
       selectedIndex = index;

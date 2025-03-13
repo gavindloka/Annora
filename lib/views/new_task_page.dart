@@ -4,7 +4,8 @@ import 'package:annora_survey/widgets/project_card.dart';
 import 'package:flutter/material.dart';
 
 class NewTaskPage extends StatefulWidget {
-  const NewTaskPage({super.key});
+  final String email;
+  const NewTaskPage({super.key, required this.email});
 
   @override
   State<NewTaskPage> createState() => _NewTaskPageState();
@@ -15,7 +16,6 @@ class _NewTaskPageState extends State<NewTaskPage> {
   String errorMsg = '';
   bool isLoading = true;
 
-  final String email = "ahmad.surya@example.com";
   final TaskViewModel taskViewModel = TaskViewModel(); 
 
   @override
@@ -25,7 +25,7 @@ class _NewTaskPageState extends State<NewTaskPage> {
   }
 
   Future<void> fetchTasks() async {
-  final result = await TaskViewModel().getNewTasks(email);
+  final result = await TaskViewModel().getNewTasks(widget.email);
   if (result['success']) {
     setState(() {
       newTasks = result['data'];
