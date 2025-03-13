@@ -1,19 +1,12 @@
+import 'package:annora_survey/models/task.dart';
 import 'package:flutter/material.dart';
 
 class ProjectCard extends StatelessWidget {
-  final String projectId;
-  final String name;
-  final String location;
-  final String type;
-  final Color backgroundColor;
+  final Task task;
 
   const ProjectCard({
     super.key,
-    required this.projectId,
-    required this.name,
-    required this.location,
-    required this.type,
-    required this.backgroundColor,
+    required this.task,
   });
 
   @override
@@ -22,14 +15,14 @@ class ProjectCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: Colors.lightBlue,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "ID Project: #$projectId",
+            "ID Project: #",
             style: const TextStyle(fontSize: 16, color: Colors.white),
           ),
           const SizedBox(height: 5),
@@ -42,7 +35,7 @@ class ProjectCard extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 TextSpan(
-                  text: name,
+                  text: task.customerName,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -50,12 +43,12 @@ class ProjectCard extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            "Lokasi : $location",
+            "Lokasi : ${task.address}",
             style: const TextStyle(fontSize: 16, color: Colors.white),
           ),
           const SizedBox(height: 5),
           Text(
-            "Tipe : $type",
+            "Tipe : ${task.category}",
             style: const TextStyle(fontSize: 16, color: Colors.white),
           ),
         ],

@@ -64,7 +64,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                         ),
                       ),
                       const Text(
-                        "Selamat datang di Suveyor Annora",
+                        "Selamat datang di Surveyor Annora",
                         style: TextStyle(
                           fontSize: 14,
                           fontStyle: FontStyle.italic,

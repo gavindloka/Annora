@@ -9,7 +9,7 @@ class LoginViewModel {
     final String loginUrl = dotenv.env['LOGIN_URL'] ?? '';
 
     if (loginUrl.isEmpty) {
-      return {'success': false, 'message': 'API URL not set in .env'};
+      return {'success': false, 'message': 'API URL is not available'};
     }
 
     String rawJson = '{"email": "$username", "password": "$password"}';
@@ -38,4 +38,5 @@ class LoginViewModel {
       return {'success': false, 'message': 'Error: $e'};
     }
   }
+
 }
