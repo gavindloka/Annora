@@ -1,5 +1,5 @@
 import 'package:annora_survey/views/account_page.dart';
-import 'package:annora_survey/views/history_task_page.dart';
+import 'package:annora_survey/views/history_page.dart';
 import 'package:annora_survey/views/new_task_page.dart';
 import 'package:annora_survey/widgets/top_bar.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +30,7 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     pages = [
       NewTaskPage(email: widget.email),
-      const HistoryTaskPage(),
+      HistoryPage(email:widget.email),
       AccountPage(
         username: widget.username,
         email: widget.email,

@@ -25,7 +25,7 @@ class _NewTaskPageState extends State<NewTaskPage> {
   }
 
   Future<void> fetchTasks() async {
-  final result = await TaskViewModel().getNewTasks(widget.email);
+  final result = await TaskViewModel().getTasks(widget.email,true);
   if (result['success']) {
     setState(() {
       newTasks = result['data'];

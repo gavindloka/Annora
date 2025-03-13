@@ -1,5 +1,3 @@
-import 'package:annora_survey/views/history_task_page.dart';
-import 'package:annora_survey/views/new_task_page.dart';
 import 'package:flutter/material.dart';
 
 class BottomBar extends StatefulWidget {

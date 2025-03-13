@@ -4,17 +4,20 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class TaskViewModel {
-  Future<Map<String, dynamic>> getNewTasks(String email) async {
+  Future<Map<String, dynamic>> getTasks(String email, bool isNew) async {
     List<Task> tasks = [];
-    final String getNewTasksUrl = dotenv.env['GET_NEW_TASK_URL'] ?? '';
+    final String taskUrl = isNew 
+    ? dotenv.env['GET_NEW_TASK_URL'] ?? '' 
+    : dotenv.env['GET_ALL_TASK_URL'] ?? '';
 
-    if (getNewTasksUrl.isEmpty) {
+
+    if (taskUrl.isEmpty) {
       return {'success': false, 'message': 'API URL is not available'};
     }
 
     try {
       final response = await http.post(
-        Uri.parse(getNewTasksUrl),
+        Uri.parse(taskUrl),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {'email': email},
       );
