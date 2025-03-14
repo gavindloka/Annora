@@ -1,5 +1,6 @@
 import 'package:annora_survey/models/task.dart';
 import 'package:annora_survey/utils/helper.dart';
+import 'package:annora_survey/views/form_survey_page.dart';
 import 'package:flutter/material.dart';
 
 class TaskDetailPage extends StatelessWidget {
@@ -118,7 +119,12 @@ class TaskDetailPage extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              // Handle Process Survey action
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FormSurveyPage(task: task),
+                ),
+              );
             },
             child: const Text(
               "Process Survey",

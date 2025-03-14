@@ -3,13 +3,13 @@ import 'package:annora_survey/models/task.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-class TaskViewModel {
+class TaskViewModel { 
   Future<Map<String, dynamic>> getTasks(String email, bool isNew) async {
     List<Task> tasks = [];
-    final String taskUrl = isNew 
-    ? dotenv.env['GET_NEW_TASK_URL'] ?? '' 
-    : dotenv.env['GET_ALL_TASK_URL'] ?? '';
-
+    final String taskUrl =
+        isNew
+            ? dotenv.env['GET_NEW_TASK_URL'] ?? ''
+            : dotenv.env['GET_ALL_TASK_URL'] ?? '';
 
     if (taskUrl.isEmpty) {
       return {'success': false, 'message': 'API URL is not available'};
@@ -40,6 +40,7 @@ class TaskViewModel {
                           taskData['project_id']?.toString() ?? '0',
                         ) ??
                         0,
+                    appNo: taskData['app_no'] ?? 'Unknown App Number',
                     startDate:
                         DateTime.tryParse(taskData['start_date'] ?? '') ??
                         DateTime.now(),
@@ -62,7 +63,9 @@ class TaskViewModel {
                         int.tryParse(taskData['progress']?.toString() ?? '0') ??
                         0,
                     status: taskData['status'] ?? 'Unknown Status',
-                    statusSurveyor: taskData['status_surveyor'] ?? 'Unknown Status Surveyor',
+                    statusSurveyor:
+                        taskData['status_surveyor'] ??
+                        'Unknown Status Surveyor',
                   );
                 }).toList();
           } else {

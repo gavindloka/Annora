@@ -2,6 +2,7 @@
 class Task {
   int projectID;
   int woID;
+  String appNo;
   DateTime startDate;
   DateTime targetDate;
   String nameProject;
@@ -18,6 +19,7 @@ class Task {
   Task({
     required this.projectID,
     required this.woID,
+    required this. appNo,
     required this.startDate,
     required this.targetDate,
     required this.nameProject,

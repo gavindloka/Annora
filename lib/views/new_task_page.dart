@@ -16,8 +16,6 @@ class _NewTaskPageState extends State<NewTaskPage> {
   String errorMsg = '';
   bool isLoading = true;
 
-  final TaskViewModel taskViewModel = TaskViewModel(); 
-
   @override
   void initState() {
     super.initState();
