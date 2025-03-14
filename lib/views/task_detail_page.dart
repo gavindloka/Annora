@@ -1,4 +1,5 @@
 import 'package:annora_survey/models/task.dart';
+import 'package:annora_survey/utils/helper.dart';
 import 'package:flutter/material.dart';
 
 class TaskDetailPage extends StatelessWidget {
@@ -54,7 +55,7 @@ class TaskDetailPage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: Helper.getStatusSurveyorColor(task.statusSurveyor),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(

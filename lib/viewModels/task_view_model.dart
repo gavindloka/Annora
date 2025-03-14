@@ -62,6 +62,7 @@ class TaskViewModel {
                         int.tryParse(taskData['progress']?.toString() ?? '0') ??
                         0,
                     status: taskData['status'] ?? 'Unknown Status',
+                    statusSurveyor: taskData['status_surveyor'] ?? 'Unknown Status Surveyor',
                   );
                 }).toList();
           } else {

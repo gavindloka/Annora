@@ -14,6 +14,7 @@ class Task {
   String surveyorEmail;
   int progress;
   String status;
+  String statusSurveyor;
   Task({
     required this.projectID,
     required this.woID,
@@ -29,5 +30,6 @@ class Task {
     required this.surveyorEmail,
     required this.progress,
     required this.status,
+    required this.statusSurveyor
   });
 }

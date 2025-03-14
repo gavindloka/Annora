@@ -34,7 +34,13 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MainPage(username: username, email: email, phone:phone, regional: regional),
+          builder:
+              (context) => MainPage(
+                username: username,
+                email: email,
+                phone: phone,
+                regional: regional,
+              ),
         ),
       );
     } else {
@@ -77,7 +83,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             const SizedBox(height: 30),
-
 
             ElevatedButton(
               onPressed: handleLogin,
