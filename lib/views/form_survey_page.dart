@@ -7,6 +7,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
+import 'package:permission_handler/permission_handler.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 class FormSurveyPage extends StatefulWidget {
   final Task task;
   const FormSurveyPage({super.key, required this.task});
@@ -36,6 +39,9 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   String _longitude = "Loading...";
 
   bool _isLocationFetched = false;
+
+  GoogleMapController? _mapController;
+  LatLng? _currentLocation;
 
   @override
   void initState() {
@@ -116,6 +122,41 @@ class _FormSurveyPageState extends State<FormSurveyPage>
 
   Future<void> _getCurrentLocation() async {
     if (_isLocationFetched) return;
+
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      _showPermissionDialog(
+        "Location Services Disabled",
+        "Please enable location services in your settings.",
+        openSettings: false,
+      );
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        _showPermissionDialog(
+          "Location Permission Required",
+          "This app needs location access to work properly.",
+        );
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      _showPermissionDialog(
+        "Location Permission Denied Forever",
+        "You have permanently denied location access. Please enable it in settings.",
+        openSettings: true,
+      );
+      return;
+    }
+
     try {
       Position position = await Geolocator.getCurrentPosition();
       setState(() {
@@ -124,12 +165,37 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         _isLocationFetched = true;
       });
     } catch (e) {
-      setState(() {
-        _latitude = "Failed to get location: $e";
-        _longitude = "Failed to get location: $e";
-        _isLocationFetched = true;
-      });
+      _showPermissionDialog("Error", "Failed to get location: $e");
     }
+  }
+
+  void _showPermissionDialog(
+    String title,
+    String message, {
+    bool openSettings = false,
+  }) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              if (openSettings)
+                TextButton(
+                  onPressed: () {
+                    openAppSettings();
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Open Settings"),
+                ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -325,66 +391,71 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     if (questions.isEmpty) {
       return const Center(child: Text("No data available"));
     }
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...questions.map((question) {
-            switch (question.type) {
-              case 'shorttext':
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      labelText: question.question,
-                      border: OutlineInputBorder(),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ...questions.map((question) {
+              switch (question.type) {
+                case 'shorttext':
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        labelText: question.question,
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        formData[question.id] = value;
+                      },
                     ),
-                    onChanged: (value) {
-                      formData[question.id] = value;
-                    },
-                  ),
-                );
-              case 'dropdown':
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: question.question,
-                      border: OutlineInputBorder(),
+                  );
+                case 'dropdown':
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: question.question,
+                        border: OutlineInputBorder(),
+                      ),
+                      items:
+                          question.options
+                              .map(
+                                (option) => DropdownMenuItem(
+                                  value: option.label,
+                                  child: Text(option.label),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        formData[question.id] = value;
+                      },
                     ),
-                    items:
-                        question.options
-                            .map(
-                              (option) => DropdownMenuItem(
-                                value: option.label,
-                                child: Text(option.label),
-                              ),
-                            )
-                            .toList(),
-                    onChanged: (value) {
-                      formData[question.id] = value;
-                    },
-                  ),
-                );
-              default:
-                return const SizedBox.shrink();
-            }
-          }),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text("Submit", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+                  );
+                default:
+                  return const SizedBox.shrink();
+              }
+            }),
+            ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text(
+                "Submit",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildLocationDetail() {
-     if (_selectedLocationItem == "Titik Koordinat") {
-    _getCurrentLocation(); 
-  }
+    if (_selectedLocationItem == "Titik Koordinat") {
+      _getCurrentLocation();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -415,6 +486,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         if (_selectedLocationItem == "Titik Koordinat") ...[
           Text("Latitude: $_latitude", style: const TextStyle(fontSize: 16)),
           Text("Longitude: $_longitude", style: const TextStyle(fontSize: 16)),
+          const SizedBox(height: 10),
         ],
         if (_selectedLocationItem != "Titik Koordinat")
           _buildImagePlaceholder(),
