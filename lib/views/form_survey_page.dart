@@ -3,6 +3,7 @@ import 'package:annora_survey/models/task.dart';
 import 'package:annora_survey/utils/helper.dart';
 import 'package:annora_survey/viewModels/question_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
@@ -22,6 +23,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   bool isLoading = true;
   String _selectedLocationItem = "";
   bool _isDetailVisible = false;
+
   final ImagePicker _picker = ImagePicker();
   File? _imageSelfie;
   File? _imageTampakDepan;
@@ -29,6 +31,11 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   File? _imageJalan;
   File? _imageLingkungan;
   File? _imageTitikKoordinat;
+
+  String _latitude = "Loading...";
+  String _longitude = "Loading...";
+
+  bool _isLocationFetched = false;
 
   @override
   void initState() {
@@ -104,6 +111,24 @@ class _FormSurveyPageState extends State<FormSurveyPage>
       case "Titik Koordinat":
         _imageTitikKoordinat = image;
         break;
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    if (_isLocationFetched) return;
+    try {
+      Position position = await Geolocator.getCurrentPosition();
+      setState(() {
+        _latitude = position.latitude.toString();
+        _longitude = position.longitude.toString();
+        _isLocationFetched = true;
+      });
+    } catch (e) {
+      setState(() {
+        _latitude = "Failed to get location: $e";
+        _longitude = "Failed to get location: $e";
+        _isLocationFetched = true;
+      });
     }
   }
 
@@ -357,6 +382,9 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   }
 
   Widget _buildLocationDetail() {
+     if (_selectedLocationItem == "Titik Koordinat") {
+    _getCurrentLocation(); 
+  }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -369,6 +397,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                 icon: const Icon(Icons.arrow_back, color: Colors.orange),
                 onPressed: () {
                   setState(() {
+                    _isLocationFetched = false;
                     _isDetailVisible = false;
                   });
                 },
@@ -383,17 +412,11 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         ),
         const SizedBox(height: 10),
 
-        if (_selectedLocationItem == "Titik Koordinat")
-          const Text("Koordinat GPS: -6.2088, 106.8456"),
-        if (_selectedLocationItem == "Foto Selfie")
-          _buildImagePlaceholder(),
-        if (_selectedLocationItem == "Foto Tampak Depan")
-          _buildImagePlaceholder(),
-        if (_selectedLocationItem == "Foto Tampak Samping")
-          _buildImagePlaceholder(),
-        if (_selectedLocationItem == "Foto Jalan")
-          _buildImagePlaceholder(),
-        if (_selectedLocationItem == "Foto Lingkungan")
+        if (_selectedLocationItem == "Titik Koordinat") ...[
+          Text("Latitude: $_latitude", style: const TextStyle(fontSize: 16)),
+          Text("Longitude: $_longitude", style: const TextStyle(fontSize: 16)),
+        ],
+        if (_selectedLocationItem != "Titik Koordinat")
           _buildImagePlaceholder(),
 
         const SizedBox(height: 30),
@@ -467,20 +490,21 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                 )
                 : null,
       ),
-          child: selectedImage == null
-        ? Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20), 
-              border: Border.all(color: Colors.grey, width: 2), 
-            ),
-            child: const Center(
-              child: Icon(Icons.home, size: 80, color: Colors.grey),
-            ),
-          )
-        : null,
+      child:
+          selectedImage == null
+              ? Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey, width: 2),
+                ),
+                child: const Center(
+                  child: Icon(Icons.home, size: 80, color: Colors.grey),
+                ),
+              )
+              : null,
     );
   }
 }
