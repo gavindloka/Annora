@@ -3,6 +3,8 @@ import 'package:annora_survey/models/task.dart';
 import 'package:annora_survey/utils/helper.dart';
 import 'package:annora_survey/viewModels/question_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class FormSurveyPage extends StatefulWidget {
   final Task task;
@@ -18,6 +20,15 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   late TabController _tabController;
   List<Question> questions = [];
   bool isLoading = true;
+  String _selectedLocationItem = "";
+  bool _isDetailVisible = false;
+  final ImagePicker _picker = ImagePicker();
+  File? _imageSelfie;
+  File? _imageTampakDepan;
+  File? _imageTampakSamping;
+  File? _imageJalan;
+  File? _imageLingkungan;
+  File? _imageTitikKoordinat;
 
   @override
   void initState() {
@@ -28,7 +39,9 @@ class _FormSurveyPageState extends State<FormSurveyPage>
 
   Future<void> fetchSurveyData() async {
     setState(() => isLoading = true);
-    final result = await QuestionViewModel().getSurveyProjectForm(widget.task.projectID.toString());
+    final result = await QuestionViewModel().getSurveyProjectForm(
+      widget.task.projectID.toString(),
+    );
 
     if (result['success']) {
       setState(() {
@@ -47,6 +60,51 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _takePhoto() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.camera,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _updateImageVariable(File(pickedFile.path));
+      });
+    }
+  }
+
+  Future<void> _choosePhoto() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _updateImageVariable(File(pickedFile.path));
+      });
+    }
+  }
+
+  void _updateImageVariable(File image) {
+    switch (_selectedLocationItem) {
+      case "Foto Selfie":
+        _imageSelfie = image;
+        break;
+      case "Foto Tampak Depan":
+        _imageTampakDepan = image;
+        break;
+      case "Foto Tampak Samping":
+        _imageTampakSamping = image;
+        break;
+      case "Foto Jalan":
+        _imageJalan = image;
+        break;
+      case "Foto Lingkungan":
+        _imageLingkungan = image;
+        break;
+      case "Titik Koordinat":
+        _imageTitikKoordinat = image;
+        break;
+    }
   }
 
   @override
@@ -136,16 +194,100 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   }
 
   Widget _buildLokasiSurveyTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _isDetailVisible ? _buildLocationDetail() : _buildLocationGrid(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Detail Lokasi",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 20),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 5,
+          mainAxisSpacing: 5,
+          childAspectRatio: 1.2,
+          children: [
+            _buildLocationItem(
+              icon: Icons.location_pin,
+              label: "Titik Koordinat",
+              color: Colors.red,
+            ),
+            _buildLocationItem(
+              icon: Icons.camera_alt,
+              label: "Foto Selfie",
+              color: Colors.orange,
+            ),
+            _buildLocationItem(
+              icon: Icons.image,
+              label: "Foto Tampak Depan",
+              color: Colors.blue,
+            ),
+            _buildLocationItem(
+              icon: Icons.image_outlined,
+              label: "Foto Tampak Samping",
+              color: Colors.purple,
+            ),
+            _buildLocationItem(
+              icon: Icons.directions_walk,
+              label: "Foto Jalan",
+              color: Colors.lightBlue,
+            ),
+            _buildLocationItem(
+              icon: Icons.landscape,
+              label: "Foto Lingkungan",
+              color: Colors.pink,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationItem({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedLocationItem = label;
+          _isDetailVisible = true;
+        });
+      },
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Detail Lokasi",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 40, color: color),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
@@ -205,12 +347,140 @@ class _FormSurveyPageState extends State<FormSurveyPage>
             }
           }),
           ElevatedButton(
-            onPressed: (){},
+            onPressed: () {},
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: const Text("Submit", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLocationDetail() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          spacing: 5,
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.orange),
+                onPressed: () {
+                  setState(() {
+                    _isDetailVisible = false;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              _selectedLocationItem,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        if (_selectedLocationItem == "Titik Koordinat")
+          const Text("Koordinat GPS: -6.2088, 106.8456"),
+        if (_selectedLocationItem == "Foto Selfie")
+          _buildImagePlaceholder(),
+        if (_selectedLocationItem == "Foto Tampak Depan")
+          _buildImagePlaceholder(),
+        if (_selectedLocationItem == "Foto Tampak Samping")
+          _buildImagePlaceholder(),
+        if (_selectedLocationItem == "Foto Jalan")
+          _buildImagePlaceholder(),
+        if (_selectedLocationItem == "Foto Lingkungan")
+          _buildImagePlaceholder(),
+
+        const SizedBox(height: 30),
+
+        if (_selectedLocationItem != "Titik Koordinat")
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _takePhoto,
+                icon: const Icon(Icons.camera_alt, color: Colors.white),
+                label: const Text("Take Photo"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              ),
+              ElevatedButton.icon(
+                onPressed: _choosePhoto,
+                icon: const Icon(Icons.photo_library, color: Colors.white),
+                label: const Text("Choose Photo"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 121, 179, 227),
+                ),
+              ),
+            ],
+          ),
+        // const SizedBox(height: 30),
+        // Center(
+        //   child: ElevatedButton(
+        //     onPressed: () {},
+        //     style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+        //     child: const Text("Save", style: TextStyle(color: Colors.white)),
+        //   ),
+        // ),
+      ],
+    );
+  }
+
+  Widget _buildImagePlaceholder() {
+    File? selectedImage;
+
+    switch (_selectedLocationItem) {
+      case "Foto Selfie":
+        selectedImage = _imageSelfie;
+        break;
+      case "Foto Tampak Depan":
+        selectedImage = _imageTampakDepan;
+        break;
+      case "Foto Tampak Samping":
+        selectedImage = _imageTampakSamping;
+        break;
+      case "Foto Jalan":
+        selectedImage = _imageJalan;
+        break;
+      case "Foto Lingkungan":
+        selectedImage = _imageLingkungan;
+        break;
+      case "Titik Koordinat":
+        selectedImage = _imageTitikKoordinat;
+        break;
+    }
+
+    return Container(
+      width: double.infinity,
+      height: 300,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        image:
+            selectedImage != null
+                ? DecorationImage(
+                  image: FileImage(selectedImage),
+                  fit: BoxFit.cover,
+                )
+                : null,
+      ),
+          child: selectedImage == null
+        ? Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20), 
+              border: Border.all(color: Colors.grey, width: 2), 
+            ),
+            child: const Center(
+              child: Icon(Icons.home, size: 80, color: Colors.grey),
+            ),
+          )
+        : null,
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:annora_survey/viewModels/auth_view_model.dart';
 import 'package:annora_survey/views/main_page.dart';
-import 'package:annora_survey/views/new_task_page.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {

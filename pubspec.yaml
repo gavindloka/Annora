@@ -33,6 +33,8 @@ dependencies:
   flutter_dotenv: ^5.1.0
   http: ^0.13.6
   flutter_cors: ^1.5.0
+  image_picker: ^1.1.2
+  geolocator: ^13.0.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
