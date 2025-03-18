@@ -37,7 +37,6 @@ class _NewTaskPageState extends State<NewTaskPage> {
     });
   }
 }
-
   @override
   Widget build(BuildContext context) {
     return (Scaffold(

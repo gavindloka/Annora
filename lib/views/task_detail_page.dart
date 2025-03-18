@@ -1,11 +1,43 @@
 import 'package:annora_survey/models/task.dart';
+import 'package:annora_survey/models/wo.dart';
 import 'package:annora_survey/utils/helper.dart';
+import 'package:annora_survey/viewModels/wo_view_model.dart';
 import 'package:annora_survey/views/form_survey_page.dart';
 import 'package:flutter/material.dart';
 
-class TaskDetailPage extends StatelessWidget {
+class TaskDetailPage extends StatefulWidget {
   final Task task;
   const TaskDetailPage({super.key, required this.task});
+
+  @override
+  State<TaskDetailPage> createState() => _TaskDetailPageState();
+}
+
+class _TaskDetailPageState extends State<TaskDetailPage> {
+  WO? woData;
+  bool isLoading = true;
+  String errorMsg = '';
+
+  Future<void> fetchWO() async {
+    final result = await WOViewModel().getWO(widget.task.woID.toString());
+    if (result['success']) {
+      setState(() {
+        woData = result['data'];
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        errorMsg = result['message'];
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchWO();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,22 +88,24 @@ class TaskDetailPage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Helper.getStatusSurveyorColor(task.statusSurveyor),
+                color: Helper.getStatusSurveyorColor(
+                  widget.task.statusSurveyor,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Tanggal : ${task.startDate}",
+                    "Tanggal : ${widget.task.startDate}",
                     style: TextStyle(color: Colors.white),
                   ),
                   Text(
-                    "Nama Client : ${task.company}",
+                    "Nama Client : ${widget.task.company}",
                     style: TextStyle(color: Colors.white),
                   ),
                   Text(
-                    "App No : ${task.projectID}",
+                    "App No : ${widget.task.projectID}",
                     style: TextStyle(color: Colors.white),
                   ),
                 ],
@@ -83,25 +117,32 @@ class TaskDetailPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            buildDetailRow("Customer Name", task.customerName),
-            const SizedBox(height: 6),
-            buildDetailRow("Unit", task.surveyType),
-            const SizedBox(height: 6),
-            buildDetailRow("Status Unit", task.status),
-            const SizedBox(height: 6),
-            buildDetailRow("Alamat", task.address),
-            const SizedBox(height: 6),
-            buildDetailRow("Telephone", "1234"),
-            const SizedBox(height: 6),
-            buildDetailRow("Nama Perusahaan", task.company),
-            const SizedBox(height: 6),
-            buildDetailRow("Jabatan", "STAF KEUANGAN"),
-            const SizedBox(height: 6),
-            buildDetailRow("Keterangan", "tanpa keterangan"),
-            const SizedBox(height: 6),
-            buildDetailRow("Kode Pos", "121212"),
-            const SizedBox(height: 6),
-            buildDetailRow("Jenis Survey", task.category),
+
+            if (isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (woData != null) ...[
+              buildDetailRow("Customer Name", widget.task.customerName),
+              const SizedBox(height: 6),
+              buildDetailRow("Unit", widget.task.surveyType),
+              const SizedBox(height: 6),
+              buildDetailRow("Status Unit", widget.task.status),
+              const SizedBox(height: 6),
+              buildDetailRow("Alamat", widget.task.address),
+              const SizedBox(height: 6),
+              buildDetailRow("Telephone", woData!.telephone),
+              const SizedBox(height: 6),
+              buildDetailRow("Nama Perusahaan", widget.task.company),
+              const SizedBox(height: 6),
+              buildDetailRow("Jabatan", woData!.jabatan),
+              const SizedBox(height: 6),
+              buildDetailRow("Keterangan", woData!.keterangan),
+              const SizedBox(height: 6),
+              buildDetailRow("Kode Pos", woData!.kodePos),
+              const SizedBox(height: 6),
+              buildDetailRow("Jenis Survey", widget.task.category),
+            ] else if (errorMsg.isNotEmpty) ...[
+              Text('Error: $errorMsg', style: TextStyle(color: Colors.red)),
+            ],
           ],
         ),
       ),
@@ -122,7 +163,7 @@ class TaskDetailPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => FormSurveyPage(task: task),
+                  builder: (context) => FormSurveyPage(task: widget.task),
                 ),
               );
             },

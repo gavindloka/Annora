@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:convert';
 
 class FormSurveyPage extends StatefulWidget {
   final Task task;
@@ -34,6 +34,13 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   File? _imageJalan;
   File? _imageLingkungan;
   File? _imageTitikKoordinat;
+
+  String? _imageSelfieBase64;
+  String? _imageTampakDepanBase64;
+  String? _imageTampakSampingBase64;
+  String? _imageJalanBase64;
+  String? _imageLingkunganBase64;
+  String? _imageTitikKoordinatBase64;
 
   String _latitude = "Loading...";
   String _longitude = "Loading...";
@@ -97,25 +104,40 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     }
   }
 
-  void _updateImageVariable(File image) {
+  void _updateImageVariable(File image)async {
+    List<int> imageBytes = await image.readAsBytes();
+    String base64Image = base64Encode(imageBytes);
+
     switch (_selectedLocationItem) {
       case "Foto Selfie":
         _imageSelfie = image;
+        _imageSelfieBase64 = base64Image;
+        print("ini base imageselfie: $_imageSelfieBase64");
         break;
       case "Foto Tampak Depan":
         _imageTampakDepan = image;
+        _imageTampakDepanBase64 = base64Image;
+        print(_imageTampakDepanBase64);
         break;
       case "Foto Tampak Samping":
         _imageTampakSamping = image;
+        _imageTampakSampingBase64 = base64Image;
+        print(_imageTampakSampingBase64);
         break;
       case "Foto Jalan":
         _imageJalan = image;
+        _imageJalanBase64 = base64Image;
+        print(_imageJalanBase64);
         break;
       case "Foto Lingkungan":
         _imageLingkungan = image;
+        _imageLingkunganBase64 = base64Image;
+        print(_imageLingkunganBase64);
         break;
       case "Titik Koordinat":
         _imageTitikKoordinat = image;
+        _imageTitikKoordinatBase64 = base64Image;
+        print(_imageTitikKoordinatBase64);
         break;
     }
   }
