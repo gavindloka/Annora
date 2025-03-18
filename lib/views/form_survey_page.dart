@@ -7,7 +7,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
 
 class FormSurveyPage extends StatefulWidget {
@@ -46,9 +45,6 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   String _longitude = "Loading...";
 
   bool _isLocationFetched = false;
-
-  GoogleMapController? _mapController;
-  LatLng? _currentLocation;
 
   @override
   void initState() {
@@ -104,7 +100,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     }
   }
 
-  void _updateImageVariable(File image)async {
+  void _updateImageVariable(File image) async {
     List<int> imageBytes = await image.readAsBytes();
     String base64Image = base64Encode(imageBytes);
 
@@ -215,6 +211,81 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                   },
                   child: const Text("Open Settings"),
                 ),
+            ],
+          ),
+    );
+  }
+
+Future<Map<String, dynamic>> prepareSurveyData() async {
+  List<Map<String, dynamic>> surveyResults = [];
+
+  formData.forEach((id, answer) {
+    var question = questions.firstWhere((q) => q.id == id);
+    
+    surveyResults.add({
+      "id_pertanyaan": id,
+      "pertanyaan": question.question,
+      "jawaban": answer,
+    });
+  });
+
+  Map<String, dynamic> surveyData = {
+    "project_id": widget.task.projectID,
+    "survey_results": surveyResults,
+  };
+
+  return surveyData;
+}
+
+  Future<void> _submitSurveyForm() async {
+  if (formData.isEmpty) {
+    _showErrorDialog("Form is empty", "Please fill out all the fields.");
+    return;
+  }
+
+  Map<String, dynamic> surveyData = await prepareSurveyData();
+
+  final result = await QuestionViewModel().addSurveyResult(surveyData);
+
+  if (result['success']) {
+    _showSuccessDialog(
+      "Survey Submitted",
+      "Your survey has been successfully submitted.",
+    );
+    print(result['data']);
+  } else {
+    _showErrorDialog("Submission Failed", result['message']);
+  }
+}
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showSuccessDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
             ],
           ),
     );
@@ -461,7 +532,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
               }
             }),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: _submitSurveyForm,
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               child: const Text(
                 "Submit",
