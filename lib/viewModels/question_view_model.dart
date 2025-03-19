@@ -54,6 +54,34 @@ class QuestionViewModel {
     }
   }
 
+  Future<Map<String, dynamic>> addCoordinate(
+    String projectID,
+    String latitude,
+    String longitude,
+  ) async {
+    final String url = dotenv.env['ADD_COORDINATE_SURVEY_URL'] ?? '';
+    final Map<String, dynamic> payload = {
+      'project_id': projectID,
+      'coordinate_survey': {'lat': latitude, 'long': longitude},
+    };
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        body: jsonEncode(payload),
+      );
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to add coordinate: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+
   Future<Map<String, dynamic>> addPhoto(
     String projectID,
     String title,

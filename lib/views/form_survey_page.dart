@@ -309,6 +309,19 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     print(result);
   }
 
+  Future<void> _addCoordinate(
+    String projectID,
+    String latitude,
+    String longitude,
+  ) async {
+    final result = await QuestionViewModel().addCoordinate(
+      projectID,
+      latitude,
+      longitude,
+    );
+    print(result);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -652,13 +665,20 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                 default:
                   imageBase64 = "";
               }
-
-              await _addPhoto(
-                widget.task.projectID.toString(),
-                _selectedLocationItem,
-                imageBase64,
-                "$_latitude, $_longitude",
-              );
+              if (_selectedLocationItem != "Titik Koordinat") {
+                await _addPhoto(
+                  widget.task.projectID.toString(),
+                  _selectedLocationItem,
+                  imageBase64,
+                  "$_latitude, $_longitude",
+                );
+              } else {
+                await _addCoordinate(
+                  widget.task.projectID.toString(),
+                  _latitude,
+                  _longitude,
+                );
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: const Text("Save", style: TextStyle(color: Colors.white)),
