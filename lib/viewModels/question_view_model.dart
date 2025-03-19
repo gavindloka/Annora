@@ -53,4 +53,36 @@ class QuestionViewModel {
       return {'success': false, 'message': 'Error: $e'};
     }
   }
+
+  Future<Map<String, dynamic>> addPhoto(
+    String projectID,
+    String title,
+    String photo,
+    String coordinate,
+  ) async {
+    final String url = dotenv.env['ADD_PHOTO_URL'] ?? '';
+    try {
+      final Map<String, dynamic> payload = {
+        'id_project': projectID,
+        'title': title,
+        'photo': photo,
+        'coordinate': coordinate,
+      };
+      final response = await http.post(
+        Uri.parse(url),
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to add photo: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
 }

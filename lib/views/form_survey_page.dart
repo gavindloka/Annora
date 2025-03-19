@@ -216,47 +216,50 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     );
   }
 
-Future<Map<String, dynamic>> prepareSurveyData() async {
-  List<Map<String, dynamic>> surveyResults = [];
+  Future<Map<String, dynamic>> prepareSurveyData() async {
+    List<Map<String, dynamic>> surveyResults = [];
 
-  formData.forEach((id, answer) {
-    var question = questions.firstWhere((q) => q.id == id);
-    
-    surveyResults.add({
-      "id_pertanyaan": id,
-      "pertanyaan": question.question,
-      "jawaban": answer,
+    formData.forEach((id, answer) {
+      var question = questions.firstWhere((q) => q.id == id);
+
+      surveyResults.add({
+        "id_pertanyaan": id,
+        "pertanyaan": question.question,
+        "jawaban": answer,
+      });
     });
-  });
 
-  Map<String, dynamic> surveyData = {
-    "project_id": widget.task.projectID,
-    "survey_results": surveyResults,
-  };
+    Map<String, dynamic> surveyData = {
+      "project_id": widget.task.projectID,
+      "survey_results": surveyResults,
+    };
 
-  return surveyData;
-}
+    return surveyData;
+  }
 
   Future<void> _submitSurveyForm() async {
-  if (formData.isEmpty) {
-    _showErrorDialog("Form is empty", "Please fill out all the fields.");
-    return;
+    if (formData.isEmpty) {
+      _showErrorDialog("Form is empty", "Please fill out all the fields.");
+      return;
+    }
+
+    Map<String, dynamic> surveyData = await prepareSurveyData();
+
+    final result = await QuestionViewModel().addSurveyResult(surveyData);
+
+    if (result['success']) {
+      _showSuccessDialog(
+        "Survey Submitted",
+        "Your survey has been successfully submitted.",
+      );
+      print(result['data']);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } else {
+      _showErrorDialog("Submission Failed", result['message']);
+    }
   }
 
-  Map<String, dynamic> surveyData = await prepareSurveyData();
-
-  final result = await QuestionViewModel().addSurveyResult(surveyData);
-
-  if (result['success']) {
-    _showSuccessDialog(
-      "Survey Submitted",
-      "Your survey has been successfully submitted.",
-    );
-    print(result['data']);
-  } else {
-    _showErrorDialog("Submission Failed", result['message']);
-  }
-}
   void _showErrorDialog(String title, String message) {
     showDialog(
       context: context,
@@ -289,6 +292,21 @@ Future<Map<String, dynamic>> prepareSurveyData() async {
             ],
           ),
     );
+  }
+
+  Future<void> _addPhoto(
+    String projectID,
+    String title,
+    String photo,
+    String coordinate,
+  ) async {
+    final result = await QuestionViewModel().addPhoto(
+      projectID,
+      title,
+      photo,
+      coordinate,
+    );
+    print(result);
   }
 
   @override
@@ -606,14 +624,46 @@ Future<Map<String, dynamic>> prepareSurveyData() async {
               ),
             ],
           ),
-        // const SizedBox(height: 30),
-        // Center(
-        //   child: ElevatedButton(
-        //     onPressed: () {},
-        //     style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-        //     child: const Text("Save", style: TextStyle(color: Colors.white)),
-        //   ),
-        // ),
+        const SizedBox(height: 30),
+        Center(
+          child: ElevatedButton(
+            onPressed: () async {
+              String imageBase64 = "";
+
+              switch (_selectedLocationItem) {
+                case "Foto Selfie":
+                  imageBase64 = _imageSelfieBase64 ?? "";
+                  break;
+                case "Foto Tampak Depan":
+                  imageBase64 = _imageTampakDepanBase64 ?? "";
+                  break;
+                case "Foto Tampak Samping":
+                  imageBase64 = _imageTampakSampingBase64 ?? "";
+                  break;
+                case "Foto Jalan":
+                  imageBase64 = _imageJalanBase64 ?? "";
+                  break;
+                case "Foto Lingkungan":
+                  imageBase64 = _imageLingkunganBase64 ?? "";
+                  break;
+                case "Titik Koordinat":
+                  imageBase64 = _imageTitikKoordinatBase64 ?? "";
+                  break;
+                default:
+                  imageBase64 = "";
+              }
+
+              await _addPhoto(
+                widget.task.projectID.toString(),
+                _selectedLocationItem,
+                imageBase64,
+                "$_latitude, $_longitude",
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text("Save", style: TextStyle(color: Colors.white)),
+          ),
+        ),
       ],
     );
   }
