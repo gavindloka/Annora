@@ -1,7 +1,9 @@
 import 'package:annora_survey/models/question.dart';
 import 'package:annora_survey/models/task.dart';
+import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/utils/helper.dart';
 import 'package:annora_survey/viewModels/question_view_model.dart';
+import 'package:annora_survey/views/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +13,8 @@ import 'dart:convert';
 
 class FormSurveyPage extends StatefulWidget {
   final Task task;
-  const FormSurveyPage({super.key, required this.task});
+  final User user;
+  const FormSurveyPage({super.key, required this.task, required this.user});
 
   @override
   State<FormSurveyPage> createState() => _FormSurveyPageState();
@@ -51,6 +54,34 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     fetchSurveyData();
+  }
+
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Confirm"),
+            content: const Text(
+              "Are you sure you want to leave? You may lose your progress.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).pop();
+                },
+                child: const Text("Yes"),
+              ),
+            ],
+          ),
+    );
   }
 
   Future<void> fetchSurveyData() async {
@@ -104,38 +135,34 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     List<int> imageBytes = await image.readAsBytes();
     String base64Image = base64Encode(imageBytes);
 
-    switch (_selectedLocationItem) {
-      case "Foto Selfie":
-        _imageSelfie = image;
-        _imageSelfieBase64 = base64Image;
-        print("ini base imageselfie: $_imageSelfieBase64");
-        break;
-      case "Foto Tampak Depan":
-        _imageTampakDepan = image;
-        _imageTampakDepanBase64 = base64Image;
-        print(_imageTampakDepanBase64);
-        break;
-      case "Foto Tampak Samping":
-        _imageTampakSamping = image;
-        _imageTampakSampingBase64 = base64Image;
-        print(_imageTampakSampingBase64);
-        break;
-      case "Foto Jalan":
-        _imageJalan = image;
-        _imageJalanBase64 = base64Image;
-        print(_imageJalanBase64);
-        break;
-      case "Foto Lingkungan":
-        _imageLingkungan = image;
-        _imageLingkunganBase64 = base64Image;
-        print(_imageLingkunganBase64);
-        break;
-      case "Titik Koordinat":
-        _imageTitikKoordinat = image;
-        _imageTitikKoordinatBase64 = base64Image;
-        print(_imageTitikKoordinatBase64);
-        break;
-    }
+    setState(() {
+      switch (_selectedLocationItem) {
+        case "Foto Selfie":
+          _imageSelfie = image;
+          _imageSelfieBase64 = base64Image;
+          break;
+        case "Foto Tampak Depan":
+          _imageTampakDepan = image;
+          _imageTampakDepanBase64 = base64Image;
+          break;
+        case "Foto Tampak Samping":
+          _imageTampakSamping = image;
+          _imageTampakSampingBase64 = base64Image;
+          break;
+        case "Foto Jalan":
+          _imageJalan = image;
+          _imageJalanBase64 = base64Image;
+          break;
+        case "Foto Lingkungan":
+          _imageLingkungan = image;
+          _imageLingkunganBase64 = base64Image;
+          break;
+        case "Titik Koordinat":
+          _imageTitikKoordinat = image;
+          _imageTitikKoordinatBase64 = base64Image;
+          break;
+      }
+    });
   }
 
   Future<void> _getCurrentLocation() async {
@@ -238,29 +265,35 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   }
 
   Future<void> _submitSurveyForm() async {
-    if (formData.isEmpty) {
-      _showErrorDialog("Form is empty", "Please fill out all the fields.");
+   for (var question in questions) {
+    if (question.required == 'Y' && (formData[question.id] == null || formData[question.id].isEmpty)) {
+      _showErrorDialog("Validation Error", "Please fill out the required field: ${question.question}");
       return;
     }
+  }
 
     Map<String, dynamic> surveyData = await prepareSurveyData();
 
     final result = await QuestionViewModel().addSurveyResult(surveyData);
 
     if (result['success']) {
-      _showSuccessDialog(
+      await _showSuccessDialog(
         "Survey Submitted",
-        "Your survey has been successfully submitted.",
+        "Your survey has been successfully submitted. The survey answers will be checked by the central admin.",
       );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MainPage(user: widget.user)),
+      );
+
       print(result['data']);
-      if (!mounted) return;
-      Navigator.of(context).pop();
     } else {
       _showErrorDialog("Submission Failed", result['message']);
     }
   }
 
-  void _showErrorDialog(String title, String message) {
+  Future<void> _showErrorDialog(String title, String message) async {
     showDialog(
       context: context,
       builder:
@@ -269,7 +302,9 @@ class _FormSurveyPageState extends State<FormSurveyPage>
             content: Text(message),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 child: const Text("OK"),
               ),
             ],
@@ -277,8 +312,8 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     );
   }
 
-  void _showSuccessDialog(String title, String message) {
-    showDialog(
+  Future<void> _showSuccessDialog(String title, String message) async {
+    return showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
@@ -286,7 +321,9 @@ class _FormSurveyPageState extends State<FormSurveyPage>
             content: Text(message),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 child: const Text("OK"),
               ),
             ],
@@ -300,13 +337,34 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     String photo,
     String coordinate,
   ) async {
-    final result = await QuestionViewModel().addPhoto(
-      projectID,
-      title,
-      photo,
-      coordinate,
-    );
-    print(result);
+    try {
+      final result = await QuestionViewModel().addPhoto(
+        projectID,
+        title,
+        photo,
+        coordinate,
+      );
+      if (result['success']) {
+        await _showSuccessDialog(
+          "Photo Added Successfully",
+          "The $title photo has been uploaded successfully.",
+        );
+        setState(() {
+          _isLocationFetched = false;
+          _isDetailVisible = false;
+        });
+      } else {
+        await _showErrorDialog(
+          "Failed to Add Photo",
+          result['message'] ?? "Something went wrong.",
+        );
+      }
+    } catch (e) {
+      await _showErrorDialog(
+        "Error",
+        "An error occurred while adding the photo: $e",
+      );
+    }
   }
 
   Future<void> _addCoordinate(
@@ -314,12 +372,33 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     String latitude,
     String longitude,
   ) async {
-    final result = await QuestionViewModel().addCoordinate(
-      projectID,
-      latitude,
-      longitude,
-    );
-    print(result);
+    try {
+      final result = await QuestionViewModel().addCoordinate(
+        projectID,
+        latitude,
+        longitude,
+      );
+      if (result['success']) {
+        await _showSuccessDialog(
+          "Coordinate Added Successfully",
+          "The coordinates have been added successfully.",
+        );
+        setState(() {
+          _isLocationFetched = false;
+          _isDetailVisible = false;
+        });
+      } else {
+        await _showErrorDialog(
+          "Failed to Add Coordinates",
+          result['message'] ?? "Something went wrong.",
+        );
+      }
+    } catch (e) {
+      await _showErrorDialog(
+        "Error",
+        "An error occurred while adding the coordinates: $e",
+      );
+    }
   }
 
   @override
@@ -335,7 +414,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
             child: IconButton(
               iconSize: 18,
               icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: _showConfirmationDialog,
             ),
           ),
         ),

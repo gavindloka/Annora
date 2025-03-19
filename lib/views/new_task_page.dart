@@ -1,11 +1,12 @@
 import 'package:annora_survey/models/task.dart';
+import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/viewModels/task_view_model.dart';
 import 'package:annora_survey/widgets/project_card.dart';
 import 'package:flutter/material.dart';
 
 class NewTaskPage extends StatefulWidget {
-  final String email;
-  const NewTaskPage({super.key, required this.email});
+  final User user;
+  const NewTaskPage({super.key, required this.user});
 
   @override
   State<NewTaskPage> createState() => _NewTaskPageState();
@@ -23,7 +24,7 @@ class _NewTaskPageState extends State<NewTaskPage> {
   }
 
   Future<void> fetchTasks() async {
-  final result = await TaskViewModel().getTasks(widget.email,true);
+  final result = await TaskViewModel().getTasks(widget.user.email,true);
   if (result['success']) {
     setState(() {
       newTasks = result['data'];
@@ -57,7 +58,7 @@ class _NewTaskPageState extends State<NewTaskPage> {
                       : ListView.builder(
                               itemCount: newTasks.length,
                               itemBuilder: (context, index) {
-                                return ProjectCard(task: newTasks[index]);
+                                return ProjectCard(task: newTasks[index], user: widget.user,);
                               },
                       ),
             ),

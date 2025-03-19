@@ -1,4 +1,5 @@
 import 'package:annora_survey/models/task.dart';
+import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/models/wo.dart';
 import 'package:annora_survey/utils/helper.dart';
 import 'package:annora_survey/viewModels/wo_view_model.dart';
@@ -7,7 +8,8 @@ import 'package:flutter/material.dart';
 
 class TaskDetailPage extends StatefulWidget {
   final Task task;
-  const TaskDetailPage({super.key, required this.task});
+  final User user;
+  const TaskDetailPage({super.key, required this.task, required this.user});
 
   @override
   State<TaskDetailPage> createState() => _TaskDetailPageState();
@@ -163,7 +165,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => FormSurveyPage(task: widget.task),
+                  builder: (context) => FormSurveyPage(task: widget.task, user: widget.user,),
                 ),
               );
             },

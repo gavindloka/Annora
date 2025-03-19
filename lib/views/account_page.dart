@@ -1,16 +1,11 @@
+import 'package:annora_survey/models/user.dart';
 import 'package:flutter/material.dart';
 
 class AccountPage extends StatefulWidget {
-  final String username;
-  final String email;
-  final String phone;
-  final String regional;
+  final User user;
   const AccountPage({
     super.key,
-    required this.username,
-    required this.email,
-    required this.phone,
-    required this.regional,
+    required this.user
   });
 
   @override
@@ -31,13 +26,13 @@ class _AccountPageState extends State<AccountPage> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
-            Text("Name: ${widget.username}", style: TextStyle(fontSize: 18)),
+            Text("Name: ${widget.user.name}", style: TextStyle(fontSize: 18)),
             SizedBox(height: 10),
-            Text("Email: ${widget.email}", style: TextStyle(fontSize: 18)),
+            Text("Email: ${widget.user.email}", style: TextStyle(fontSize: 18)),
             SizedBox(height: 10),
-            Text("Phone: ${widget.phone}", style: TextStyle(fontSize: 18)),
+            Text("Phone: ${widget.user.phone}", style: TextStyle(fontSize: 18)),
             SizedBox(height: 10),
-            Text("Region: ${widget.regional}", style: TextStyle(fontSize: 18)),
+            Text("Region: ${widget.user.phone}", style: TextStyle(fontSize: 18)),
           ],
         ),
       ),

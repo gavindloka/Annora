@@ -1,12 +1,14 @@
 import 'package:annora_survey/models/task.dart';
+import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/utils/helper.dart';
 import 'package:annora_survey/views/task_detail_page.dart';
 import 'package:flutter/material.dart';
 
 class ProjectCard extends StatelessWidget {
   final Task task;
+  final User user;
 
-  const ProjectCard({super.key, required this.task});
+  const ProjectCard({super.key, required this.task, required this.user});
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -14,7 +16,7 @@ class ProjectCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TaskDetailPage(task: task),
+            builder: (context) => TaskDetailPage(task: task, user: user),
           ),
         );
       },

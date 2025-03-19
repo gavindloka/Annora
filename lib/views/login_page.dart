@@ -1,3 +1,4 @@
+import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/viewModels/auth_view_model.dart';
 import 'package:annora_survey/views/main_page.dart';
 import 'package:flutter/material.dart';
@@ -26,21 +27,17 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       print(result['data']);
-      String username = result['data'].name;
-      String email = result['data'].email;
-      String phone = result['data'].phone;
-      String regional = result['data'].region;
+      User user = User(
+        id: result['data'].id,
+        name: result['data'].name,
+        email: result['data'].email,
+        phone: result['data'].phone,
+        region: result['data'].region,
+        token: result['data'].token,
+      );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder:
-              (context) => MainPage(
-                username: username,
-                email: email,
-                phone: phone,
-                regional: regional,
-              ),
-        ),
+        MaterialPageRoute(builder: (context) => MainPage(user: user)),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

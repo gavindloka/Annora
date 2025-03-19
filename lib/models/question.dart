@@ -9,7 +9,7 @@ class Question {
   final String description;
   final int order;
   final String type;
-  final bool required;
+  final String required;
   final List<String> validation;
   final List<QuestionOption> options;
 
@@ -33,7 +33,7 @@ class Question {
       description: json['deskripsi'],
       order: int.parse(json['urut']),
       type: json['jenis'],
-      required: json['required'] == "Y",
+      required: json['required'],
       validation: List<String>.from(jsonDecode(json['validation'] ?? '[]')),
       options: (json['options'] as List)
           .map((option) => QuestionOption.fromJson(option))

@@ -1,11 +1,12 @@
 import 'package:annora_survey/models/task.dart';
+import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/viewModels/task_view_model.dart';
 import 'package:annora_survey/widgets/project_card.dart';
 import 'package:flutter/material.dart';
 
 class HistoryPage extends StatefulWidget {
-  final String email;
-  const HistoryPage({super.key, required this.email});
+  final User user;
+  const HistoryPage({super.key, required this.user});
 
   @override
   State<HistoryPage> createState() => _HistoryPageState();
@@ -25,7 +26,7 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> fetchTasks() async {
-    final result = await TaskViewModel().getTasks(widget.email, false);
+    final result = await TaskViewModel().getTasks(widget.user.email, false);
     if (result['success']) {
       setState(() {
         historyTasks = result['data'];
@@ -61,7 +62,10 @@ class _HistoryPageState extends State<HistoryPage> {
                       : ListView.builder(
                         itemCount: historyTasks.length,
                         itemBuilder: (context, index) {
-                          return ProjectCard(task: historyTasks[index]);
+                          return ProjectCard(
+                            task: historyTasks[index],
+                            user: widget.user,
+                          );
                         },
                       ),
             ),

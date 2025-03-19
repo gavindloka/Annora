@@ -1,3 +1,4 @@
+import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/views/account_page.dart';
 import 'package:annora_survey/views/history_page.dart';
 import 'package:annora_survey/views/new_task_page.dart';
@@ -5,17 +6,8 @@ import 'package:annora_survey/widgets/top_bar.dart';
 import 'package:flutter/material.dart';
 
 class MainPage extends StatefulWidget {
-  final String username;
-  final String email;
-  final String phone;
-  final String regional;
-  const MainPage({
-    super.key,
-    required this.username,
-    required this.email,
-    required this.phone,
-    required this.regional,
-  });
+  final User user;
+  const MainPage({super.key, required this.user});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -29,13 +21,10 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     pages = [
-      NewTaskPage(email: widget.email),
-      HistoryPage(email:widget.email),
+      NewTaskPage(user:widget.user),
+      HistoryPage(user:widget.user ),
       AccountPage(
-        username: widget.username,
-        email: widget.email,
-        phone: widget.phone,
-        regional: widget.regional,
+        user:widget.user
       ),
     ];
   }
@@ -49,7 +38,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TopBar(username: widget.username),
+      appBar: TopBar(username: widget.user.name),
       body: pages[selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const [
