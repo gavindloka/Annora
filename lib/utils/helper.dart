@@ -9,7 +9,7 @@ class Helper {
         return Colors.amber;
       case 'Read Task':
         return Colors.blue;
-      case 'On Progress Task':
+      case 'OnProgress':
         return Colors.lightBlue;
       case 'Uploading Task':
         return Colors.green;

@@ -1,3 +1,4 @@
+import 'package:annora_survey/views/login_page.dart';
 import 'package:flutter/material.dart';
 
 class TopBar extends StatelessWidget implements PreferredSizeWidget {
@@ -23,20 +24,32 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Image.asset(
+              ClipOval(
+                child:Image.asset(
                 "assets/images/logo.png",
                 height: 40,
                 fit: BoxFit.contain,
               ),
+              )
+              ,
               Stack(
                 children: [
-                  const Icon(
-                    Icons.notifications,
-                    size: 30,
-                    color: Colors.amber,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginPage()),
+                      );
+                    },
+                    child: Icon(
+                      Icons.notifications,
+                      size: 30,
+                      color: Colors.amber,
+                    ),
                   ),
                 ],
               ),

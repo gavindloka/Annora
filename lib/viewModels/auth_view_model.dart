@@ -32,7 +32,8 @@ class LoginViewModel {
         }
         return {'success': true, 'data': currentUser};
       } else {
-        return {'success': false, 'message': 'Login failed: ${response.body}'};
+        final data = jsonDecode(response.body);
+        return {'success': false, 'message': 'Login failed: ${data['messages']['error']}'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Error: $e'};

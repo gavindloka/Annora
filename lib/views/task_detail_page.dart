@@ -107,7 +107,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     style: TextStyle(color: Colors.white),
                   ),
                   Text(
-                    "App No : ${widget.task.projectID}",
+                    "WO ID : ${widget.task.woID}",
                     style: TextStyle(color: Colors.white),
                   ),
                 ],

@@ -97,6 +97,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                 .map((q) => Question.fromJson(q))
                 .toList();
         isLoading = false;
+        print(questions.length);
       });
     } else {
       setState(() => isLoading = false);
@@ -265,12 +266,16 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   }
 
   Future<void> _submitSurveyForm() async {
-   for (var question in questions) {
-    if (question.required == 'Y' && (formData[question.id] == null || formData[question.id].isEmpty)) {
-      _showErrorDialog("Validation Error", "Please fill out the required field: ${question.question}");
-      return;
+    for (var question in questions) {
+      if (question.required == 'Y' &&
+          (formData[question.id] == null || formData[question.id].isEmpty)) {
+        _showErrorDialog(
+          "Validation Error",
+          "Please fill out the required field: ${question.question}",
+        );
+        return;
+      }
     }
-  }
 
     Map<String, dynamic> surveyData = await prepareSurveyData();
 
@@ -351,7 +356,6 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         );
         setState(() {
           _isLocationFetched = false;
-          _isDetailVisible = false;
         });
       } else {
         await _showErrorDialog(
@@ -385,7 +389,6 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         );
         setState(() {
           _isLocationFetched = false;
-          _isDetailVisible = false;
         });
       } else {
         await _showErrorDialog(
@@ -462,7 +465,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                     style: const TextStyle(color: Colors.white),
                   ),
                   Text(
-                    "App No : ${widget.task.projectID}",
+                    "WO ID : ${widget.task.woID}",
                     style: const TextStyle(color: Colors.white),
                   ),
                 ],
@@ -601,6 +604,9 @@ class _FormSurveyPageState extends State<FormSurveyPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ...questions.map((question) {
+              print(
+                "Rendering Question: ${question.id} - ${question.question}",
+              );
               switch (question.type) {
                 case 'shorttext':
                   return Padding(
@@ -637,6 +643,46 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                       },
                     ),
                   );
+                case 'options':
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          question.question,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            ...question.options.map((option) {
+                              return Expanded(
+                                child: Row(
+                                  children: [
+                                    Radio<String>(
+                                      value: option.label,
+                                      groupValue: formData[question.id],
+                                      onChanged: (String? selected) {
+                                        setState(() {
+                                          formData[question.id] = selected;
+                                        });
+                                      },
+                                    ),
+                                    Text(option.label),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+
                 default:
                   return const SizedBox.shrink();
               }
@@ -693,8 +739,36 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         ],
         if (_selectedLocationItem != "Titik Koordinat")
           _buildImagePlaceholder(),
+        const SizedBox(height: 15),
+        const Text(
+          "Select Location",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        DropdownButton<String>(
+          value: _selectedLocationItem,
+          isExpanded: true,
+          onChanged: (String? newValue) {
+            setState(() {
+              _selectedLocationItem = newValue!;
+            });
+          },
+          items:
+              <String>[
+                'Titik Koordinat',
+                'Foto Selfie',
+                'Foto Tampak Depan',
+                'Foto Tampak Samping',
+                'Foto Jalan',
+                'Foto Lingkungan',
+              ].map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+        ),
 
-        const SizedBox(height: 30),
+        const SizedBox(height: 15),
 
         if (_selectedLocationItem != "Titik Koordinat")
           Row(
@@ -716,7 +790,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
               ),
             ],
           ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 10),
         Center(
           child: ElevatedButton(
             onPressed: () async {

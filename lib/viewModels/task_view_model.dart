@@ -77,9 +77,10 @@ class TaskViewModel {
         }
         return {'success': true, 'data': tasks};
       } else {
+        final data = jsonDecode(response.body);
         return {
           'success': false,
-          'message': 'Fetching tasks failed: ${response.body}',
+          'message': '${data['message']}',
         };
       }
     } catch (e) {
