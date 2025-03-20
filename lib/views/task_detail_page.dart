@@ -99,7 +99,11 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Tanggal : ${widget.task.startDate}",
+                    "Start Date : ${widget.task.startDate.toString().substring(0, widget.task.startDate.toString().indexOf(' '))}",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    "Target Date : ${widget.task.targetDate.toString().substring(0, widget.task.targetDate.toString().indexOf(' '))}",
                     style: TextStyle(color: Colors.white),
                   ),
                   Text(
@@ -123,25 +127,31 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             if (isLoading)
               const Center(child: CircularProgressIndicator())
             else if (woData != null) ...[
-              buildDetailRow("Customer Name", widget.task.customerName),
+              buildDetailRow("Customer Name", woData!.customerName),
               const SizedBox(height: 6),
-              buildDetailRow("Unit", widget.task.surveyType),
+              buildDetailRow("Cabang", woData!.cabang),
               const SizedBox(height: 6),
-              buildDetailRow("Status Unit", widget.task.status),
+              buildDetailRow("Status Unit", woData!.statusUnit),
               const SizedBox(height: 6),
-              buildDetailRow("Alamat", widget.task.address),
+              buildDetailRow("Alamat", woData!.alamat),
               const SizedBox(height: 6),
               buildDetailRow("Telephone", woData!.telephone),
               const SizedBox(height: 6),
-              buildDetailRow("Nama Perusahaan", widget.task.company),
+              buildDetailRow("Nama Perusahaan", woData!.namaPerusahaan),
               const SizedBox(height: 6),
               buildDetailRow("Jabatan", woData!.jabatan),
+              const SizedBox(height: 6),
+              buildDetailRow("Sales", woData!.sales),
               const SizedBox(height: 6),
               buildDetailRow("Keterangan", woData!.keterangan),
               const SizedBox(height: 6),
               buildDetailRow("Kode Pos", woData!.kodePos),
               const SizedBox(height: 6),
-              buildDetailRow("Jenis Survey", widget.task.category),
+              buildDetailRow("Jenis Survey", woData!.jenisSurvey),
+              const SizedBox(height: 6),
+              buildDetailRow("Tipe Survey", woData!.tipeSurvey),
+              const SizedBox(height: 6),
+              buildDetailRow("Nama Pasangan", woData!.namaPasangan),
             ] else if (errorMsg.isNotEmpty) ...[
               Text('Error: $errorMsg', style: TextStyle(color: Colors.red)),
             ],
@@ -152,34 +162,64 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         padding: const EdgeInsets.all(16.0),
         child: SizedBox(
           width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              textStyle: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FormSurveyPage(task: widget.task, user: widget.user,),
-                ),
-              );
-            },
-            child: const Text(
-              "Process Survey",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
+          child:
+              widget.task.statusSurveyor == 'Uploading Task'
+                  ? ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      // Navigate to the Survey Result page
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => ,
+                      //   ),
+                      // );
+                    },
+                    child: const Text(
+                      "Survey Result",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                  : ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => FormSurveyPage(
+                                task: widget.task,
+                                user: widget.user,
+                              ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "Process Survey",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
         ),
       ),
     );
   }
 
   Widget buildDetailRow(String label, String value) {
+    String displayValue = (value == null || value.isEmpty) ? "Empty" : value;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: RichText(
@@ -192,7 +232,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           children: [
             TextSpan(text: "$label: "),
             TextSpan(
-              text: value,
+              text: displayValue,
               style: TextStyle(fontWeight: FontWeight.normal),
             ),
           ],

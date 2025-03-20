@@ -60,6 +60,10 @@ class ProjectCard extends StatelessWidget {
               "Tipe : ${task.category}",
               style: const TextStyle(fontSize: 16, color: Colors.white),
             ),
+            Text(
+              "Status Surveyor : ${task.statusSurveyor}",
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
           ],
         ),
       ),
