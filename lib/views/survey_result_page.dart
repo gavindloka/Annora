@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:annora_survey/models/task.dart';
 import 'package:annora_survey/utils/helper.dart';
 import 'package:annora_survey/viewModels/question_view_model.dart';
@@ -20,15 +23,19 @@ class _SurveyResultPageState extends State<SurveyResultPage>
   bool isLoading = true;
   bool isError = false;
 
-  Future<void> _loadSurveyPhoto()async{
-    final result = await QuestionViewModel().getSurveyPhoto(widget.task.projectID.toString());
+  Future<void> _loadSurveyPhoto() async {
+    final result = await QuestionViewModel().getSurveyPhoto(
+      widget.task.projectID.toString(),
+    );
     if (result['success']) {
       setState(() {
-        surveyPhotos = List<Map<String, dynamic>>.from(result['results']);
+        surveyPhotos = 
+        List<Map<String, dynamic>>.from(result['results']);
+        // [result['results'][2]];
       });
     }
+    print(surveyPhotos[1]);
   }
-
 
   Future<void> _loadSurveyResults() async {
     final result = await QuestionViewModel().getSurveyResult(
@@ -45,7 +52,7 @@ class _SurveyResultPageState extends State<SurveyResultPage>
         isError = true;
       });
     }
-    print(result);
+    print(result['results']);
   }
 
   void initState() {
@@ -54,6 +61,20 @@ class _SurveyResultPageState extends State<SurveyResultPage>
     _loadSurveyResults();
     _loadSurveyPhoto();
   }
+
+Future<Uint8List> normalizeAndDecodeBase64(String data) async {
+  try {
+    data = data.replaceAll(RegExp(r'^data:image\/\w+;base64,'), '');
+    data = data.replaceAll(RegExp(r'\s+'), ''); 
+
+    data = base64.normalize(data);
+    return base64.decode(data);
+  } catch (error, stackTrace) {
+    print('Error: Could not decompress image: $error\n$stackTrace');
+    return Uint8List(0);
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +200,10 @@ class _SurveyResultPageState extends State<SurveyResultPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Question: $question", style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            "Question: $question",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Text(answer),
         ],
@@ -199,81 +223,135 @@ class _SurveyResultPageState extends State<SurveyResultPage>
     );
   }
 
-  Widget _buildLocationGrid() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Detail Lokasi",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 20),
-        GridView.count(
+Widget _buildLocationGrid() {
+  List<Widget> locationItems = [];
+
+  if (surveyPhotos.isNotEmpty) {
+    String coordinate = surveyPhotos[0]['coordinate'] ?? '';
+    List<String> coordinateParts = coordinate.split(',');
+
+    if (coordinateParts.length == 2) {
+      String longitude = coordinateParts[0].trim();
+      String latitude = coordinateParts[1].trim();
+
+      locationItems.add(_buildLocationItem(
+        label: "Coordinate",
+        coordinate: '$longitude, $latitude', 
+      ));
+    }
+  }
+
+  for (int index = 0; index < surveyPhotos.length; index++) {
+    String label = surveyPhotos[index]['title'] ?? "No title";
+    String photoUrl = surveyPhotos[index]['photo'] ?? "";
+
+    locationItems.add(_buildLocationItem(
+      label: label,
+      imageUrl: photoUrl,
+    ));
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        "Detail Lokasi",
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 20),
+      SizedBox(
+        height: MediaQuery.of(context).size.height * 0.73,
+        child: GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 2,
           crossAxisSpacing: 5,
           mainAxisSpacing: 5,
-          childAspectRatio: 1.2,
-          children: [
-            _buildLocationItem(
-              icon: Icons.location_pin,
-              label: "Titik Koordinat",
-              color: Colors.red,
-            ),
-            _buildLocationItem(
-              icon: Icons.camera_alt,
-              label: "Foto Selfie",
-              color: Colors.orange,
-            ),
-            _buildLocationItem(
-              icon: Icons.image,
-              label: "Foto Tampak Depan",
-              color: Colors.blue,
-            ),
-            _buildLocationItem(
-              icon: Icons.image_outlined,
-              label: "Foto Tampak Samping",
-              color: Colors.purple,
-            ),
-            _buildLocationItem(
-              icon: Icons.directions_walk,
-              label: "Foto Jalan",
-              color: Colors.lightBlue,
-            ),
-            _buildLocationItem(
-              icon: Icons.landscape,
-              label: "Foto Lingkungan",
-              color: Colors.pink,
-            ),
-          ],
+          childAspectRatio: 0.9,
+          children: locationItems,
         ),
-      ],
-    );
+      ),
+    ],
+  );
+}
+
+Widget _buildLocationItem({required String label, String? imageUrl, String? coordinate}) {
+  if (coordinate != null) {
+    List<String> coordinateParts = coordinate.split(',');
+
+    if (coordinateParts.length == 2) {
+      String longitude = coordinateParts[0].trim();
+      String latitude = coordinateParts[1].trim();
+
+      return Column(
+        children: [
+          Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              color: Colors.yellow,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "Longitude",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                Text(longitude, style: TextStyle(fontSize: 14)),
+                SizedBox(height: 8),
+                Text(
+                  "Latitude",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                Text(latitude, style: TextStyle(fontSize: 14)),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
   }
 
-  Widget _buildLocationItem({
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(5),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 40, color: color),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
+  return Column(
+    children: [
+      Container(
+        padding: const EdgeInsets.all(5),
+        child: imageUrl != null && imageUrl.isNotEmpty
+            ? Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(color: Colors.grey[200]),
+                child: FutureBuilder<Uint8List>(
+                  future: normalizeAndDecodeBase64(imageUrl),
+                  builder: (context, snapshot) {
+                    print('Base64 string length: ${imageUrl.length}');
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    }
+
+                    final imageBytes = snapshot.data ?? Uint8List(0);
+                    return Image.memory(
+                      imageBytes,
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.cover,
+                    );
+                  },
+                ),
+              )
+            : Icon(Icons.image, size: 40, color: Colors.grey),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        label,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+      ),
+    ],
+  );
+}
 }

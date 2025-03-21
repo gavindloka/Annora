@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:annora_survey/models/question.dart';
 import 'package:annora_survey/models/task.dart';
 import 'package:annora_survey/models/user.dart';
@@ -10,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class FormSurveyPage extends StatefulWidget {
   final Task task;
@@ -134,7 +137,16 @@ class _FormSurveyPageState extends State<FormSurveyPage>
 
   void _updateImageVariable(File image) async {
     List<int> imageBytes = await image.readAsBytes();
-    String base64Image = base64Encode(imageBytes);
+
+    Uint8List uint8ListImageBytes = Uint8List.fromList(imageBytes);
+    var compressedImage = await FlutterImageCompress.compressWithList(
+      uint8ListImageBytes,
+      minWidth: 150,
+      minHeight: 150,
+      quality: 70,
+    );
+
+    String base64Image = base64Encode(compressedImage);
 
     setState(() {
       switch (_selectedLocationItem) {
