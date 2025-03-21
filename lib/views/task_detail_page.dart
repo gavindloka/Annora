@@ -4,6 +4,7 @@ import 'package:annora_survey/models/wo.dart';
 import 'package:annora_survey/utils/helper.dart';
 import 'package:annora_survey/viewModels/wo_view_model.dart';
 import 'package:annora_survey/views/form_survey_page.dart';
+import 'package:annora_survey/views/survey_result_page.dart';
 import 'package:flutter/material.dart';
 
 class TaskDetailPage extends StatefulWidget {
@@ -174,13 +175,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       ),
                     ),
                     onPressed: () {
-                      // Navigate to the Survey Result page
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => ,
-                      //   ),
-                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SurveyResultPage(task: widget.task),
+                        ),
+                      );
                     },
                     child: const Text(
                       "Survey Result",

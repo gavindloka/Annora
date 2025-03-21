@@ -12,6 +12,7 @@ class Question {
   final String required;
   final List<String> validation;
   final List<QuestionOption> options;
+  final String answer;
 
   Question({
     required this.id,
@@ -23,6 +24,7 @@ class Question {
     required this.required,
     required this.validation,
     required this.options,
+    required this.answer
   });
 
   factory Question.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class Question {
       options: (json['options'] as List)
           .map((option) => QuestionOption.fromJson(option))
           .toList(),
+      answer: json['jawaban'] ?? ''
     );
   }
 }

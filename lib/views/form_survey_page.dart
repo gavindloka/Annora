@@ -457,16 +457,20 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Tanggal : ${widget.task.startDate}",
-                    style: const TextStyle(color: Colors.white),
+                    "Start Date : ${widget.task.startDate.toString().substring(0, widget.task.startDate.toString().indexOf(' '))}",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    "Target Date : ${widget.task.targetDate.toString().substring(0, widget.task.targetDate.toString().indexOf(' '))}",
+                    style: TextStyle(color: Colors.white),
                   ),
                   Text(
                     "Nama Client : ${widget.task.company}",
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white),
                   ),
                   Text(
                     "WO ID : ${widget.task.woID}",
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white),
                   ),
                 ],
               ),

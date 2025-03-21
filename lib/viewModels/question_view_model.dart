@@ -113,4 +113,112 @@ class QuestionViewModel {
       return {'success': false, 'message': 'Error: $e'};
     }
   }
+
+  Future<Map<String, dynamic>> getSurveyResult(String projectID) async {
+    final String url = dotenv.env['GET_PROJECT_RESULT_URL'] ?? '';
+
+    if (url.isEmpty) {
+      return {'success': false, 'message': 'API URL is not available'};
+    }
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {'id_project': projectID},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['message'] == 'Success' && data['data'] != null) {
+          List<dynamic> surveyResults = data['data']['survey_results'];
+          List<Map<String, dynamic>> formattedResults =
+              surveyResults
+                  .map(
+                    (result) => {
+                      'question': result['pertanyaan'],
+                      'answer': result['jawaban'],
+                      'question_id': result['id_pertanyaan'],
+                    },
+                  )
+                  .toList();
+
+          String lat = data['data']['coordinate_survey']['lat'];
+          String long = data['data']['coordinate_survey']['long'];
+          return {
+            'success': true,
+            'message': 'Survey results fetched successfully',
+            'results': formattedResults,
+            'latitude': lat,
+            'longitude': long,
+          };
+        } else {
+          return {
+            'success': false,
+            'message': 'Failed to get survey result: ${data['message']}',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to get survey result: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getSurveyPhoto(String projectID) async {
+    final String url = dotenv.env['GET_PROJECT_PHOTO_URL'] ?? '';
+
+    if (url.isEmpty) {
+      return {'success': false, 'message': 'API URL is not available'};
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {'id_project': projectID},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['message'] == 'Success' && data['results'] != null) {
+          List<dynamic> surveyResults = data['results'];
+          List<Map<String, dynamic>> formattedResults =
+              surveyResults
+                  .map(
+                    (result) => {
+                      'id': result['id'],
+                      'id_project': result['id_project'],
+                      'title': result['title'],
+                      'photo': result['photo'],
+                      'coordinate': result['coordinate'],
+                      'datetime': result['datetime'],
+                    },
+                  )
+                  .toList();
+          return {
+            'success': true,
+            'message': 'Survey photos fetched successfully',
+            'results': formattedResults,
+          };
+        } else {
+          return {
+            'success': false,
+            'message': 'Failed to get survey photo: ${data['message']}',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to get survey result: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+
 }
