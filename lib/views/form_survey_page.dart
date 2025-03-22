@@ -141,12 +141,27 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     Uint8List uint8ListImageBytes = Uint8List.fromList(imageBytes);
     var compressedImage = await FlutterImageCompress.compressWithList(
       uint8ListImageBytes,
-      minWidth: 150,
-      minHeight: 150,
-      quality: 70,
+      minWidth: 300,
+      minHeight: 300,
+      quality: 85,
+      format: CompressFormat.jpeg,
     );
 
-    String base64Image = base64Encode(compressedImage);
+    if (compressedImage.isEmpty) {
+      print("Image compression failed or returned empty.");
+      return;
+    }
+
+    String base64Image;
+    try {
+      base64Image = base64Encode(compressedImage);
+      print("Image compressed and encoded successfully.");
+    } catch (e) {
+      print("Failed to base64 encode: $e");
+      return;
+    }
+
+    base64Image = base64Encode(compressedImage);
 
     setState(() {
       switch (_selectedLocationItem) {
@@ -521,53 +536,104 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   }
 
   Widget _buildLocationGrid() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
       children: [
-        const Text(
-          "Detail Lokasi",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 80),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Detail Lokasi",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 5,
+                mainAxisSpacing: 5,
+                childAspectRatio: 1.2,
+                children: [
+                  _buildLocationItem(
+                    icon: Icons.location_pin,
+                    label: "Titik Koordinat",
+                    color: Colors.red,
+                  ),
+                  _buildLocationItem(
+                    icon: Icons.camera_alt,
+                    label: "Foto Selfie",
+                    color: Colors.orange,
+                    image: _imageSelfie,
+                  ),
+                  _buildLocationItem(
+                    icon: Icons.image,
+                    label: "Foto Tampak Depan",
+                    color: Colors.blue,
+                    image: _imageTampakDepan,
+                  ),
+                  _buildLocationItem(
+                    icon: Icons.image_outlined,
+                    label: "Foto Tampak Samping",
+                    color: Colors.purple,
+                    image: _imageTampakSamping,
+                  ),
+                  _buildLocationItem(
+                    icon: Icons.directions_walk,
+                    label: "Foto Jalan",
+                    color: Colors.lightBlue,
+                    image: _imageJalan,
+                  ),
+                  _buildLocationItem(
+                    icon: Icons.landscape,
+                    label: "Foto Lingkungan",
+                    color: Colors.pink,
+                    image: _imageLingkungan,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 20),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 5,
-          mainAxisSpacing: 5,
-          childAspectRatio: 1.2,
-          children: [
-            _buildLocationItem(
-              icon: Icons.location_pin,
-              label: "Titik Koordinat",
-              color: Colors.red,
+
+        Positioned(
+          bottom: 30,
+          left: 0,
+          right: 0,
+          child: GestureDetector(
+            onTap: () {
+              if (_selectedLocationItem != "Titik Koordinat" &&
+                  (_latitude == "Loading..." || _longitude == "Loading...")) {
+                _showErrorDialog(
+                  "Coordinate Required",
+                  "Please select and save coordinates first before uploading any photos.",
+                );
+                return;
+              }
+              setState(() {
+                _selectedLocationItem = "Foto Selfie";
+                _isDetailVisible = true;
+              });
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Colors.amber,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
-            _buildLocationItem(
-              icon: Icons.camera_alt,
-              label: "Foto Selfie",
-              color: Colors.orange,
-            ),
-            _buildLocationItem(
-              icon: Icons.image,
-              label: "Foto Tampak Depan",
-              color: Colors.blue,
-            ),
-            _buildLocationItem(
-              icon: Icons.image_outlined,
-              label: "Foto Tampak Samping",
-              color: Colors.purple,
-            ),
-            _buildLocationItem(
-              icon: Icons.directions_walk,
-              label: "Foto Jalan",
-              color: Colors.lightBlue,
-            ),
-            _buildLocationItem(
-              icon: Icons.landscape,
-              label: "Foto Lingkungan",
-              color: Colors.pink,
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -577,23 +643,44 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     required IconData icon,
     required String label,
     required Color color,
+    File? image,
   }) {
     return GestureDetector(
       onTap: () {
+        if (label != "Titik Koordinat" &&
+            (_latitude == "Loading..." || _longitude == "Loading...")) {
+          _showErrorDialog(
+            "Coordinate Required",
+            "Please select and save coordinates first before uploading any photos.",
+          );
+          return;
+        }
+
         setState(() {
           _selectedLocationItem = label;
           _isDetailVisible = true;
         });
       },
+
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(5),
+            width: image != null ? 110 : null,
+            height: image != null ? 110 : null,
+            padding: image == null ? const EdgeInsets.all(5) : null,
             decoration: BoxDecoration(
               color: color.withOpacity(0.2),
-              shape: BoxShape.circle,
+              shape: image == null ? BoxShape.circle : BoxShape.rectangle,
+              borderRadius: image != null ? BorderRadius.circular(8) : null,
+              image:
+                  image != null
+                      ? DecorationImage(
+                        image: FileImage(image),
+                        fit: BoxFit.contain,
+                      )
+                      : null,
             ),
-            child: Icon(icon, size: 40, color: color),
+            child: image == null ? Icon(icon, size: 40, color: color) : null,
           ),
           const SizedBox(height: 8),
           Text(
@@ -721,6 +808,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     if (_selectedLocationItem == "Titik Koordinat") {
       _getCurrentLocation();
     }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -756,34 +844,29 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         if (_selectedLocationItem != "Titik Koordinat")
           _buildImagePlaceholder(),
         const SizedBox(height: 15),
-        const Text(
-          "Select Location",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        DropdownButton<String>(
-          value: _selectedLocationItem,
-          isExpanded: true,
-          onChanged: (String? newValue) {
-            setState(() {
-              _selectedLocationItem = newValue!;
-            });
-          },
-          items:
-              <String>[
-                'Titik Koordinat',
-                'Foto Selfie',
-                'Foto Tampak Depan',
-                'Foto Tampak Samping',
-                'Foto Jalan',
-                'Foto Lingkungan',
-              ].map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-        ),
-
+        if (_selectedLocationItem != "Titik Koordinat")
+          DropdownButton<String>(
+            value: _selectedLocationItem,
+            isExpanded: true,
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedLocationItem = newValue!;
+              });
+            },
+            items:
+                <String>[
+                  'Foto Selfie',
+                  'Foto Tampak Depan',
+                  'Foto Tampak Samping',
+                  'Foto Jalan',
+                  'Foto Lingkungan',
+                ].map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+          ),
         const SizedBox(height: 15),
 
         if (_selectedLocationItem != "Titik Koordinat")
@@ -890,7 +973,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
             selectedImage != null
                 ? DecorationImage(
                   image: FileImage(selectedImage),
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                 )
                 : null,
       ),

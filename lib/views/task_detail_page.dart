@@ -178,7 +178,11 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => SurveyResultPage(task: widget.task),
+                          builder:
+                              (context) => FormSurveyPage(
+                                task: widget.task,
+                                user: widget.user,
+                              ),
                         ),
                       );
                     },

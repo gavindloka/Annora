@@ -29,8 +29,7 @@ class _SurveyResultPageState extends State<SurveyResultPage>
     );
     if (result['success']) {
       setState(() {
-        surveyPhotos = 
-        List<Map<String, dynamic>>.from(result['results']);
+        surveyPhotos = List<Map<String, dynamic>>.from(result['results']);
         // [result['results'][2]];
       });
     }
@@ -65,15 +64,33 @@ class _SurveyResultPageState extends State<SurveyResultPage>
 Future<Uint8List> normalizeAndDecodeBase64(String data) async {
   try {
     data = data.replaceAll(RegExp(r'^data:image\/\w+;base64,'), '');
-    data = data.replaceAll(RegExp(r'\s+'), ''); 
+    data = data.replaceAll(RegExp(r'\s+'), '');
 
-    data = base64.normalize(data);
-    return base64.decode(data);
+    if (data.length < 1000 || data.length > 200000) {
+      print("Invalid base64 length: ${data.length}");
+      return Uint8List(0);
+    }
+
+    int mod4 = data.length % 4;
+    if (mod4 > 0) {
+      data += '=' * (4 - mod4); 
+    }
+
+    final decoded = base64.decode(data);
+
+    if (decoded.length < 10 || decoded[0] != 0xFF || decoded[1] != 0xD8) {
+      print("Not a valid JPEG header");
+      return Uint8List(0);
+    }
+
+    return decoded;
   } catch (error, stackTrace) {
-    print('Error: Could not decompress image: $error\n$stackTrace');
+    print('Decode error: $error\n$stackTrace');
     return Uint8List(0);
   }
 }
+
+
 
 
   @override
@@ -223,135 +240,143 @@ Future<Uint8List> normalizeAndDecodeBase64(String data) async {
     );
   }
 
-Widget _buildLocationGrid() {
-  List<Widget> locationItems = [];
+  Widget _buildLocationGrid() {
+    List<Widget> locationItems = [];
 
-  if (surveyPhotos.isNotEmpty) {
-    String coordinate = surveyPhotos[0]['coordinate'] ?? '';
-    List<String> coordinateParts = coordinate.split(',');
+    if (surveyPhotos.isNotEmpty) {
+      String coordinate = surveyPhotos[0]['coordinate'] ?? '';
+      List<String> coordinateParts = coordinate.split(',');
 
-    if (coordinateParts.length == 2) {
-      String longitude = coordinateParts[0].trim();
-      String latitude = coordinateParts[1].trim();
+      if (coordinateParts.length == 2) {
+        String longitude = coordinateParts[0].trim();
+        String latitude = coordinateParts[1].trim();
 
-      locationItems.add(_buildLocationItem(
-        label: "Coordinate",
-        coordinate: '$longitude, $latitude', 
-      ));
-    }
-  }
-
-  for (int index = 0; index < surveyPhotos.length; index++) {
-    String label = surveyPhotos[index]['title'] ?? "No title";
-    String photoUrl = surveyPhotos[index]['photo'] ?? "";
-
-    locationItems.add(_buildLocationItem(
-      label: label,
-      imageUrl: photoUrl,
-    ));
-  }
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        "Detail Lokasi",
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(height: 20),
-      SizedBox(
-        height: MediaQuery.of(context).size.height * 0.73,
-        child: GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 5,
-          mainAxisSpacing: 5,
-          childAspectRatio: 0.9,
-          children: locationItems,
-        ),
-      ),
-    ],
-  );
-}
-
-Widget _buildLocationItem({required String label, String? imageUrl, String? coordinate}) {
-  if (coordinate != null) {
-    List<String> coordinateParts = coordinate.split(',');
-
-    if (coordinateParts.length == 2) {
-      String longitude = coordinateParts[0].trim();
-      String latitude = coordinateParts[1].trim();
-
-      return Column(
-        children: [
-          Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.yellow,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  "Longitude",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(longitude, style: TextStyle(fontSize: 14)),
-                SizedBox(height: 8),
-                Text(
-                  "Latitude",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(latitude, style: TextStyle(fontSize: 14)),
-              ],
-            ),
+        locationItems.add(
+          _buildLocationItem(
+            label: "Coordinate",
+            coordinate: '$longitude, $latitude',
           ),
-        ],
-      );
+        );
+      }
     }
+
+    for (int index = 0; index < surveyPhotos.length; index++) {
+      String label = surveyPhotos[index]['title'] ?? "No title";
+      String photoUrl = surveyPhotos[index]['photo'] ?? "";
+
+      locationItems.add(_buildLocationItem(label: label, imageUrl: photoUrl));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Detail Lokasi",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.73,
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 5,
+            mainAxisSpacing: 5,
+            childAspectRatio: 0.9,
+            children: locationItems,
+          ),
+        ),
+      ],
+    );
   }
 
-  return Column(
-    children: [
-      Container(
-        padding: const EdgeInsets.all(5),
-        child: imageUrl != null && imageUrl.isNotEmpty
-            ? Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(color: Colors.grey[200]),
-                child: FutureBuilder<Uint8List>(
-                  future: normalizeAndDecodeBase64(imageUrl),
-                  builder: (context, snapshot) {
-                    print('Base64 string length: ${imageUrl.length}');
+  Widget _buildLocationItem({
+    required String label,
+    String? imageUrl,
+    String? coordinate,
+  }) {
+    if (coordinate != null) {
+      List<String> coordinateParts = coordinate.split(',');
 
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    }
+      if (coordinateParts.length == 2) {
+        String longitude = coordinateParts[0].trim();
+        String latitude = coordinateParts[1].trim();
 
-                    final imageBytes = snapshot.data ?? Uint8List(0);
-                    return Image.memory(
-                      imageBytes,
-                      width: 150,
-                      height: 150,
-                      fit: BoxFit.cover,
-                    );
-                  },
-                ),
-              )
-            : Icon(Icons.image, size: 40, color: Colors.grey),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        label,
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-      ),
-    ],
-  );
-}
+        return Column(
+          children: [
+            Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                color: Colors.yellow,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "Longitude",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(longitude, style: TextStyle(fontSize: 14)),
+                  SizedBox(height: 8),
+                  Text(
+                    "Latitude",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(latitude, style: TextStyle(fontSize: 14)),
+                ],
+              ),
+            ),
+          ],
+        );
+      }
+    }
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(5),
+          child:
+              imageUrl != null && imageUrl.isNotEmpty
+                  ? Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(color: Colors.grey[200]),
+                    child: FutureBuilder<Uint8List>(
+                      future:
+                          imageUrl != null && imageUrl.isNotEmpty
+                              ? normalizeAndDecodeBase64(imageUrl)
+                              : Future.value(Uint8List(0)),
+                      builder: (context, snapshot) {
+                        print('Base64 string length: ${imageUrl.length}');
+
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        }
+
+                        final imageBytes = snapshot.data ?? Uint8List(0);
+                        return Image.memory(
+                          imageBytes,
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.contain,
+                        );
+                      },
+                    ),
+                  )
+                  : Icon(Icons.image, size: 40, color: Colors.grey),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
 }
