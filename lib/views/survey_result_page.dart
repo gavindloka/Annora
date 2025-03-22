@@ -158,7 +158,7 @@ Future<Uint8List> normalizeAndDecodeBase64(String data) async {
                     style: TextStyle(color: Colors.white),
                   ),
                   Text(
-                    "WO ID : ${widget.task.woID}",
+                    "App No : ${widget.task.appNo}",
                     style: TextStyle(color: Colors.white),
                   ),
                 ],
@@ -170,7 +170,7 @@ Future<Uint8List> normalizeAndDecodeBase64(String data) async {
             labelColor: Colors.orange,
             unselectedLabelColor: Colors.black54,
             indicatorColor: Colors.orange,
-            tabs: const [Tab(text: "Lokasi Survey"), Tab(text: "Form Survey")],
+            tabs: const [Tab(text: "Lokasi Survey"), Tab(text: "Hasil Survey")],
           ),
           Expanded(
             child: TabBarView(

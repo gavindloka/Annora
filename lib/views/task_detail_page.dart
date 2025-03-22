@@ -112,7 +112,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     style: TextStyle(color: Colors.white),
                   ),
                   Text(
-                    "WO ID : ${widget.task.woID}",
+                    "App No : ${widget.task.appNo}",
                     style: TextStyle(color: Colors.white),
                   ),
                 ],
@@ -179,10 +179,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => FormSurveyPage(
-                                task: widget.task,
-                                user: widget.user,
-                              ),
+                              (context) => SurveyResultPage(task: widget.task),
                         ),
                       );
                     },

@@ -32,7 +32,7 @@ class _AccountPageState extends State<AccountPage> {
             SizedBox(height: 10),
             Text("Phone: ${widget.user.phone}", style: TextStyle(fontSize: 18)),
             SizedBox(height: 10),
-            Text("Region: ${widget.user.phone}", style: TextStyle(fontSize: 18)),
+            Text("Region: ${widget.user.region}", style: TextStyle(fontSize: 18)),
           ],
         ),
       ),

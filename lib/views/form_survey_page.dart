@@ -52,11 +52,14 @@ class _FormSurveyPageState extends State<FormSurveyPage>
 
   bool _isLocationFetched = false;
 
+  Map<String, String> surveyPhotos = {};
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     fetchSurveyData();
+    fetchSurveyPhotos();
   }
 
   void _showConfirmationDialog() {
@@ -132,6 +135,32 @@ class _FormSurveyPageState extends State<FormSurveyPage>
       setState(() {
         _updateImageVariable(File(pickedFile.path));
       });
+    }
+  }
+
+  Future<void> fetchSurveyPhotos() async {
+    final result = await QuestionViewModel().getSurveyPhoto(
+      widget.task.projectID.toString(),
+    );
+
+    if (result['success']) {
+      for (var photo in result['results']) {
+        surveyPhotos[photo['title']] = photo['photo'];
+
+        if ( photo['coordinate'] != null) {
+          final parts = photo['coordinate'].split(',');
+          if (parts.length == 2) {
+            setState(() {
+              _latitude = parts[0].trim();
+              _longitude = parts[1].trim();
+              _isLocationFetched = true;
+            });
+          }
+        }
+      }
+      setState(() {});
+    } else {
+      print(result['message']);
     }
   }
 
@@ -496,7 +525,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                     style: TextStyle(color: Colors.white),
                   ),
                   Text(
-                    "WO ID : ${widget.task.woID}",
+                    "App No : ${widget.task.appNo}",
                     style: TextStyle(color: Colors.white),
                   ),
                 ],
@@ -565,31 +594,26 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                     icon: Icons.camera_alt,
                     label: "Foto Selfie",
                     color: Colors.orange,
-                    image: _imageSelfie,
                   ),
                   _buildLocationItem(
                     icon: Icons.image,
                     label: "Foto Tampak Depan",
                     color: Colors.blue,
-                    image: _imageTampakDepan,
                   ),
                   _buildLocationItem(
                     icon: Icons.image_outlined,
                     label: "Foto Tampak Samping",
                     color: Colors.purple,
-                    image: _imageTampakSamping,
                   ),
                   _buildLocationItem(
                     icon: Icons.directions_walk,
                     label: "Foto Jalan",
                     color: Colors.lightBlue,
-                    image: _imageJalan,
                   ),
                   _buildLocationItem(
                     icon: Icons.landscape,
                     label: "Foto Lingkungan",
                     color: Colors.pink,
-                    image: _imageLingkungan,
                   ),
                 ],
               ),
@@ -598,7 +622,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         ),
 
         Positioned(
-          bottom: 30,
+          bottom: 10,
           left: 0,
           right: 0,
           child: GestureDetector(
@@ -643,12 +667,18 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     required IconData icon,
     required String label,
     required Color color,
-    File? image,
   }) {
+    final String? base64Photo = surveyPhotos[label];
+    final ImageProvider? imageProvider =
+        base64Photo != null ? MemoryImage(base64Decode(base64Photo)) : null;
+
+    final bool isTitikKoordinat = label == "Titik Koordinat";
+    final bool hasCoordinate =
+        _latitude != "Loading..." && _longitude != "Loading...";
+
     return GestureDetector(
       onTap: () {
-        if (label != "Titik Koordinat" &&
-            (_latitude == "Loading..." || _longitude == "Loading...")) {
+        if (!isTitikKoordinat && !hasCoordinate) {
           _showErrorDialog(
             "Coordinate Required",
             "Please select and save coordinates first before uploading any photos.",
@@ -661,26 +691,53 @@ class _FormSurveyPageState extends State<FormSurveyPage>
           _isDetailVisible = true;
         });
       },
-
       child: Column(
         children: [
           Container(
-            width: image != null ? 110 : null,
-            height: image != null ? 110 : null,
-            padding: image == null ? const EdgeInsets.all(5) : null,
+            width: 110,
+            height: 110,
+            padding: imageProvider == null ? const EdgeInsets.all(5) : null,
             decoration: BoxDecoration(
               color: color.withOpacity(0.2),
-              shape: image == null ? BoxShape.circle : BoxShape.rectangle,
-              borderRadius: image != null ? BorderRadius.circular(8) : null,
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(12),
               image:
-                  image != null
+                  imageProvider != null
                       ? DecorationImage(
-                        image: FileImage(image),
+                        image: imageProvider,
                         fit: BoxFit.contain,
                       )
                       : null,
             ),
-            child: image == null ? Icon(icon, size: 40, color: color) : null,
+            child:
+                imageProvider == null
+                    ? isTitikKoordinat && hasCoordinate
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Longitude",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(_longitude, style: TextStyle(fontSize: 12)),
+                              SizedBox(height: 8),
+                              Text(
+                                "Latitude",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(_latitude, style: TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                        )
+                        : Icon(icon, size: 40, color: color)
+                    : null,
           ),
           const SizedBox(height: 8),
           Text(
@@ -824,6 +881,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                     _isLocationFetched = false;
                     _isDetailVisible = false;
                   });
+                  fetchSurveyPhotos();
                 },
               ),
             ),
@@ -837,8 +895,8 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         const SizedBox(height: 10),
 
         if (_selectedLocationItem == "Titik Koordinat") ...[
-          Text("Latitude: $_latitude", style: const TextStyle(fontSize: 16)),
-          Text("Longitude: $_longitude", style: const TextStyle(fontSize: 16)),
+          Text("Latitude: $_latitude", style: const TextStyle(fontSize: 12)),
+          Text("Longitude: $_longitude", style: const TextStyle(fontSize: 12)),
           const SizedBox(height: 10),
         ],
         if (_selectedLocationItem != "Titik Koordinat")
