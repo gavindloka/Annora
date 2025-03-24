@@ -38,7 +38,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TopBar(username: widget.user.name),
+      appBar: TopBar(username: widget.user.name, email: widget.user.email),
       body: pages[selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const [

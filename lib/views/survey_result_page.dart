@@ -1,14 +1,19 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:annora_survey/models/notif.dart';
 import 'package:annora_survey/models/task.dart';
+import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/utils/helper.dart';
+import 'package:annora_survey/viewModels/notif_view_model.dart';
 import 'package:annora_survey/viewModels/question_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class SurveyResultPage extends StatefulWidget {
   final Task task;
-  const SurveyResultPage({super.key, required this.task});
+  final User user;
+  const SurveyResultPage({super.key, required this.task, required this.user});
 
   @override
   State<SurveyResultPage> createState() => _SurveyResultPageState();
@@ -22,6 +27,17 @@ class _SurveyResultPageState extends State<SurveyResultPage>
   List<Map<String, dynamic>> surveyPhotos = [];
   bool isLoading = true;
   bool isError = false;
+
+  List<Notif> notifications = [];
+
+ Future<void> fetchNotifications() async {
+    final result = await NotifViewModel().getNotifications(widget.user.email);
+    if (result['success']) {
+      setState(() {
+        notifications = result['data'];
+      });
+    }
+  }
 
   Future<void> _loadSurveyPhoto() async {
     final result = await QuestionViewModel().getSurveyPhoto(
@@ -59,6 +75,7 @@ class _SurveyResultPageState extends State<SurveyResultPage>
     _tabController = TabController(length: 2, vsync: this);
     _loadSurveyResults();
     _loadSurveyPhoto();
+    fetchNotifications();
   }
 
 Future<Uint8List> normalizeAndDecodeBase64(String data) async {
@@ -95,6 +112,8 @@ Future<Uint8List> normalizeAndDecodeBase64(String data) async {
 
   @override
   Widget build(BuildContext context) {
+    int unreadCount =
+        notifications.where((notif) => notif.status == "unread").length;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -119,14 +138,92 @@ Future<Uint8List> normalizeAndDecodeBase64(String data) async {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications,
-              color: Colors.orange,
-              size: 30,
-            ),
-            onPressed: () {},
-          ),
+             Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  PopupMenuButton(
+                    icon: const Icon(
+                      Icons.notifications,
+                      size: 30,
+                      color: Colors.amber,
+                    ),
+                    itemBuilder: (context) {
+                      if (isLoading) {
+                        return [
+                          const PopupMenuItem(
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ];
+                      }
+                      if (notifications.isEmpty) {
+                        return [
+                          const PopupMenuItem(
+                            child: Text("No new notifications"),
+                          ),
+                        ];
+                      }
+                      return notifications.map((notif) {
+                        bool isUnread = notif.status == "unread";
+
+                        return PopupMenuItem(
+                          child: ListTile(
+                            leading: Icon(
+                              isUnread
+                                  ? Icons.notifications_active
+                                  : Icons.notifications_none,
+                              color: isUnread ? Colors.orange : Colors.grey,
+                            ),
+                            title: Text(
+                              notif.notification,
+                              style: TextStyle(
+                                fontWeight:
+                                    isUnread ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            subtitle: Text(
+                              DateFormat('dd MMM yyyy, HH:mm').format(notif.date),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 8,
+                          minHeight: 8,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+          
         ],
       ),
       body: Column(

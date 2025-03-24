@@ -1,11 +1,14 @@
+import 'package:annora_survey/models/notif.dart';
 import 'package:annora_survey/models/task.dart';
 import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/models/wo.dart';
 import 'package:annora_survey/utils/helper.dart';
+import 'package:annora_survey/viewModels/notif_view_model.dart';
 import 'package:annora_survey/viewModels/wo_view_model.dart';
 import 'package:annora_survey/views/form_survey_page.dart';
 import 'package:annora_survey/views/survey_result_page.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class TaskDetailPage extends StatefulWidget {
   final Task task;
@@ -20,7 +23,16 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   WO? woData;
   bool isLoading = true;
   String errorMsg = '';
+   List<Notif> notifications = [];
 
+ Future<void> fetchNotifications() async {
+    final result = await NotifViewModel().getNotifications(widget.user.email);
+    if (result['success']) {
+      setState(() {
+        notifications = result['data'];
+      });
+    }
+  }
   Future<void> fetchWO() async {
     final result = await WOViewModel().getWO(widget.task.woID.toString());
     if (result['success']) {
@@ -40,10 +52,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   void initState() {
     super.initState();
     fetchWO();
+    fetchNotifications();
   }
 
   @override
   Widget build(BuildContext context) {
+    int unreadCount =
+        notifications.where((notif) => notif.status == "unread").length;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -69,18 +84,91 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         ),
         actions: [
           Stack(
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.notifications,
-                  color: Colors.orange,
-                  size: 30,
-                ),
-                onPressed: () {},
+                clipBehavior: Clip.none,
+                children: [
+                  PopupMenuButton(
+                    icon: const Icon(
+                      Icons.notifications,
+                      size: 30,
+                      color: Colors.amber,
+                    ),
+                    itemBuilder: (context) {
+                      if (isLoading) {
+                        return [
+                          const PopupMenuItem(
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ];
+                      }
+                      if (notifications.isEmpty) {
+                        return [
+                          const PopupMenuItem(
+                            child: Text("No new notifications"),
+                          ),
+                        ];
+                      }
+                      return notifications.map((notif) {
+                        bool isUnread = notif.status == "unread";
+
+                        return PopupMenuItem(
+                          child: ListTile(
+                            leading: Icon(
+                              isUnread
+                                  ? Icons.notifications_active
+                                  : Icons.notifications_none,
+                              color: isUnread ? Colors.orange : Colors.grey,
+                            ),
+                            title: Text(
+                              notif.notification,
+                              style: TextStyle(
+                                fontWeight:
+                                    isUnread ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            subtitle: Text(
+                              DateFormat('dd MMM yyyy, HH:mm').format(notif.date),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 8,
+                          minHeight: 8,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ],
-          ),
-        ],
+             ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -179,7 +267,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => SurveyResultPage(task: widget.task),
+                              (context) => SurveyResultPage(task: widget.task, user: widget.user),
                         ),
                       );
                     },

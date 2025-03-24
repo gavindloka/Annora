@@ -37,7 +37,7 @@ class TaskViewModel {
                         0,
                     woID:
                         int.tryParse(
-                          taskData['project_id']?.toString() ?? '0',
+                          taskData['wo_id']?.toString() ?? '0',
                         ) ??
                         0,
                     appNo: taskData['app_no'] ?? 'Unknown App Number',

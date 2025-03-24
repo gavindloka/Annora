@@ -1,14 +1,17 @@
 import 'dart:typed_data';
 
+import 'package:annora_survey/models/notif.dart';
 import 'package:annora_survey/models/question.dart';
 import 'package:annora_survey/models/task.dart';
 import 'package:annora_survey/models/user.dart';
 import 'package:annora_survey/utils/helper.dart';
+import 'package:annora_survey/viewModels/notif_view_model.dart';
 import 'package:annora_survey/viewModels/question_view_model.dart';
 import 'package:annora_survey/views/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
@@ -54,12 +57,24 @@ class _FormSurveyPageState extends State<FormSurveyPage>
 
   Map<String, String> surveyPhotos = {};
 
+  List<Notif> notifications = [];
+
+ Future<void> fetchNotifications() async {
+    final result = await NotifViewModel().getNotifications(widget.user.email);
+    if (result['success']) {
+      setState(() {
+        notifications = result['data'];
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     fetchSurveyData();
     fetchSurveyPhotos();
+    fetchNotifications();
   }
 
   void _showConfirmationDialog() {
@@ -462,6 +477,8 @@ class _FormSurveyPageState extends State<FormSurveyPage>
 
   @override
   Widget build(BuildContext context) {
+    int unreadCount =
+        notifications.where((notif) => notif.status == "unread").length;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -486,14 +503,92 @@ class _FormSurveyPageState extends State<FormSurveyPage>
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications,
-              color: Colors.orange,
-              size: 30,
-            ),
-            onPressed: () {},
-          ),
+          Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  PopupMenuButton(
+                    icon: const Icon(
+                      Icons.notifications,
+                      size: 30,
+                      color: Colors.amber,
+                    ),
+                    itemBuilder: (context) {
+                      if (isLoading) {
+                        return [
+                          const PopupMenuItem(
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ];
+                      }
+                      if (notifications.isEmpty) {
+                        return [
+                          const PopupMenuItem(
+                            child: Text("No new notifications"),
+                          ),
+                        ];
+                      }
+                      return notifications.map((notif) {
+                        bool isUnread = notif.status == "unread";
+
+                        return PopupMenuItem(
+                          child: ListTile(
+                            leading: Icon(
+                              isUnread
+                                  ? Icons.notifications_active
+                                  : Icons.notifications_none,
+                              color: isUnread ? Colors.orange : Colors.grey,
+                            ),
+                            title: Text(
+                              notif.notification,
+                              style: TextStyle(
+                                fontWeight:
+                                    isUnread ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            subtitle: Text(
+                              DateFormat('dd MMM yyyy, HH:mm').format(notif.date),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 8,
+                          minHeight: 8,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+       
         ],
       ),
       body: Column(

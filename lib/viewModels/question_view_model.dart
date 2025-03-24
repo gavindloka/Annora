@@ -30,6 +30,31 @@ class QuestionViewModel {
     }
   }
 
+  Future<Map<String,dynamic>> getTitlePhoto(String formID)async{
+    final String url = dotenv.env['GET_TITLE_PHOTO_URL']??'';
+    if(url.isEmpty){
+      return {'success': false, 'message': 'API URL is not available'};
+    }
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {'form_id': formID},
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {
+          'success': false,
+          'message': 'Fetching tasks failed: ${response.body}',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
+
   Future<Map<String, dynamic>> addSurveyResult(
     Map<String, dynamic> surveyData,
   ) async {
