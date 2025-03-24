@@ -4,7 +4,7 @@ import 'package:annora_survey/models/question_option.dart';
 
 class Question {
   final String id;
-  final String surveyId;
+  final String surveyID;
   final String question;
   final String description;
   final int order;
@@ -16,7 +16,7 @@ class Question {
 
   Question({
     required this.id,
-    required this.surveyId,
+    required this.surveyID,
     required this.question,
     required this.description,
     required this.order,
@@ -30,7 +30,7 @@ class Question {
   factory Question.fromJson(Map<String, dynamic> json) {
     return Question(
       id: json['id_pertanyaan'],
-      surveyId: json['id_survey'],
+      surveyID: json['id_survey'],
       question: json['pertanyaan'],
       description: json['deskripsi'],
       order: int.parse(json['urut']),

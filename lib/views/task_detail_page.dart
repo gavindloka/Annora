@@ -267,7 +267,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => SurveyResultPage(task: widget.task, user: widget.user),
+                              (context) => FormSurveyPage(task: widget.task, user: widget.user),
                         ),
                       );
                     },

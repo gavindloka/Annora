@@ -59,7 +59,12 @@ class _FormSurveyPageState extends State<FormSurveyPage>
 
   List<Notif> notifications = [];
 
- Future<void> fetchNotifications() async {
+  bool _isLoadingPhotoTitles = true;
+  List<String> _photoTitles = [];
+
+  Map<String, File?> _imageFiles = {};
+
+  Future<void> fetchNotifications() async {
     final result = await NotifViewModel().getNotifications(widget.user.email);
     if (result['success']) {
       setState(() {
@@ -72,9 +77,64 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    fetchSurveyData();
-    fetchSurveyPhotos();
-    fetchNotifications();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await fetchSurveyData();
+    await fetchSurveyPhotos();
+    await fetchNotifications();
+    await _fetchPhotoTitles();
+  }
+
+  Future<void> _fetchPhotoTitles() async {
+    setState(() {
+      _isLoadingPhotoTitles = true;
+    });
+
+    final result = await QuestionViewModel().getTitlePhoto(
+      questions.first.surveyID,
+    );
+
+    print("Full result: $result");
+
+    if (result['success']) {
+      print("Result data type: ${result['data'].runtimeType}");
+      print("Result data: ${result['data']}");
+
+      setState(() {
+        if (result['data'] is List) {
+          _photoTitles =
+              (result['data'] as List)
+                  .map<String>((item) => item['title'] as String)
+                  .toList();
+        } else if (result['data'] is Map) {
+          _photoTitles =
+              (result['data']['data'] as List)
+                  .map<String>((item) => item['title'] as String)
+                  .toList();
+        } else {
+          _photoTitles = [];
+          print("Unexpected data type: ${result['data'].runtimeType}");
+        }
+
+        _imageFiles = {
+          "Titik Koordinat": _imageTitikKoordinat,
+          for (String title in _photoTitles) title: null,
+        };
+
+        _selectedLocationItem =
+            _photoTitles.isNotEmpty ? _photoTitles.first : '';
+        print("Photo titles: $_photoTitles");
+      });
+    } else {
+      _showErrorDialog('Error', result['message']);
+      print("Error result: ${result['message']}");
+    }
+
+    setState(() {
+      _isLoadingPhotoTitles = false;
+    });
   }
 
   void _showConfirmationDialog() {
@@ -162,7 +222,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
       for (var photo in result['results']) {
         surveyPhotos[photo['title']] = photo['photo'];
 
-        if ( photo['coordinate'] != null) {
+        if (photo['coordinate'] != null) {
           final parts = photo['coordinate'].split(',');
           if (parts.length == 2) {
             setState(() {
@@ -205,35 +265,8 @@ class _FormSurveyPageState extends State<FormSurveyPage>
       return;
     }
 
-    base64Image = base64Encode(compressedImage);
-
     setState(() {
-      switch (_selectedLocationItem) {
-        case "Foto Selfie":
-          _imageSelfie = image;
-          _imageSelfieBase64 = base64Image;
-          break;
-        case "Foto Tampak Depan":
-          _imageTampakDepan = image;
-          _imageTampakDepanBase64 = base64Image;
-          break;
-        case "Foto Tampak Samping":
-          _imageTampakSamping = image;
-          _imageTampakSampingBase64 = base64Image;
-          break;
-        case "Foto Jalan":
-          _imageJalan = image;
-          _imageJalanBase64 = base64Image;
-          break;
-        case "Foto Lingkungan":
-          _imageLingkungan = image;
-          _imageLingkunganBase64 = base64Image;
-          break;
-        case "Titik Koordinat":
-          _imageTitikKoordinat = image;
-          _imageTitikKoordinatBase64 = base64Image;
-          break;
-      }
+      surveyPhotos[_selectedLocationItem] = base64Image;
     });
   }
 
@@ -504,91 +537,88 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         ),
         actions: [
           Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  PopupMenuButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      size: 30,
-                      color: Colors.amber,
-                    ),
-                    itemBuilder: (context) {
-                      if (isLoading) {
-                        return [
-                          const PopupMenuItem(
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
-                        ];
-                      }
-                      if (notifications.isEmpty) {
-                        return [
-                          const PopupMenuItem(
-                            child: Text("No new notifications"),
-                          ),
-                        ];
-                      }
-                      return notifications.map((notif) {
-                        bool isUnread = notif.status == "unread";
+            clipBehavior: Clip.none,
+            children: [
+              PopupMenuButton(
+                icon: const Icon(
+                  Icons.notifications,
+                  size: 30,
+                  color: Colors.amber,
+                ),
+                itemBuilder: (context) {
+                  if (isLoading) {
+                    return [
+                      const PopupMenuItem(
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    ];
+                  }
+                  if (notifications.isEmpty) {
+                    return [
+                      const PopupMenuItem(child: Text("No new notifications")),
+                    ];
+                  }
+                  return notifications.map((notif) {
+                    bool isUnread = notif.status == "unread";
 
-                        return PopupMenuItem(
-                          child: ListTile(
-                            leading: Icon(
-                              isUnread
-                                  ? Icons.notifications_active
-                                  : Icons.notifications_none,
-                              color: isUnread ? Colors.orange : Colors.grey,
-                            ),
-                            title: Text(
-                              notif.notification,
-                              style: TextStyle(
-                                fontWeight:
-                                    isUnread ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                            subtitle: Text(
-                              DateFormat('dd MMM yyyy, HH:mm').format(notif.date),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
+                    return PopupMenuItem(
+                      child: ListTile(
+                        leading: Icon(
+                          isUnread
+                              ? Icons.notifications_active
+                              : Icons.notifications_none,
+                          color: isUnread ? Colors.orange : Colors.grey,
+                        ),
+                        title: Text(
+                          notif.notification,
+                          style: TextStyle(
+                            fontWeight:
+                                isUnread ? FontWeight.bold : FontWeight.normal,
                           ),
-                        );
-                      }).toList();
-                    },
-                  ),
-                  if (unreadCount > 0)
-                    Positioned(
-                      right: 5,
-                      top: -2,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
                         ),
-                        constraints: const BoxConstraints(
-                          minWidth: 8,
-                          minHeight: 8,
-                        ),
-                        child: Text(
-                          unreadCount.toString(),
+                        subtitle: Text(
+                          DateFormat('dd MMM yyyy, HH:mm').format(notif.date),
                           style: const TextStyle(
-                            color: Colors.white,
                             fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
                           ),
-                          textAlign: TextAlign.center,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
                         ),
                       ),
-                    ),
-                ],
+                    );
+                  }).toList();
+                },
               ),
-       
+              if (unreadCount > 0)
+                Positioned(
+                  right: 5,
+                  top: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 8,
+                      minHeight: 8,
+                    ),
+                    child: Text(
+                      unreadCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
       body: Column(
@@ -660,6 +690,9 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   }
 
   Widget _buildLocationGrid() {
+    if (_isLoadingPhotoTitles) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Stack(
       children: [
         Padding(
@@ -678,46 +711,56 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                 crossAxisCount: 2,
                 crossAxisSpacing: 5,
                 mainAxisSpacing: 5,
-                childAspectRatio: 1.2,
+                childAspectRatio: 1,
                 children: [
                   _buildLocationItem(
                     icon: Icons.location_pin,
                     label: "Titik Koordinat",
                     color: Colors.red,
                   ),
-                  _buildLocationItem(
-                    icon: Icons.camera_alt,
-                    label: "Foto Selfie",
-                    color: Colors.orange,
-                  ),
-                  _buildLocationItem(
-                    icon: Icons.image,
-                    label: "Foto Tampak Depan",
-                    color: Colors.blue,
-                  ),
-                  _buildLocationItem(
-                    icon: Icons.image_outlined,
-                    label: "Foto Tampak Samping",
-                    color: Colors.purple,
-                  ),
-                  _buildLocationItem(
-                    icon: Icons.directions_walk,
-                    label: "Foto Jalan",
-                    color: Colors.lightBlue,
-                  ),
-                  _buildLocationItem(
-                    icon: Icons.landscape,
-                    label: "Foto Lingkungan",
-                    color: Colors.pink,
-                  ),
+                  ..._photoTitles
+                      .map(
+                        (title) => _buildLocationItem(
+                          icon: Icons.image,
+                          label: title,
+                          color: Colors.blue,
+                        ),
+                      )
+                      .toList(),
                 ],
+
+                // _buildLocationItem(
+                //   icon: Icons.camera_alt,
+                //   label: "Foto Selfie",
+                //   color: Colors.orange,
+                // ),
+                // _buildLocationItem(
+                //   icon: Icons.image,
+                //   label: "Foto Tampak Depan",
+                //   color: Colors.blue,
+                // ),
+                // _buildLocationItem(
+                //   icon: Icons.image_outlined,
+                //   label: "Foto Tampak Samping",
+                //   color: Colors.purple,
+                // ),
+                // _buildLocationItem(
+                //   icon: Icons.directions_walk,
+                //   label: "Foto Jalan",
+                //   color: Colors.lightBlue,
+                // ),
+                // _buildLocationItem(
+                //   icon: Icons.landscape,
+                //   label: "Foto Lingkungan",
+                //   color: Colors.pink,
+                // ),
               ),
             ],
           ),
         ),
 
         Positioned(
-          bottom: 10,
+          bottom: 20,
           left: 0,
           right: 0,
           child: GestureDetector(
@@ -731,7 +774,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                 return;
               }
               setState(() {
-                _selectedLocationItem = "Foto Selfie";
+                _selectedLocationItem = _photoTitles.isNotEmpty ? _photoTitles.first : "Titik Koordinat";
                 _isDetailVisible = true;
               });
             },
@@ -836,10 +879,13 @@ class _FormSurveyPageState extends State<FormSurveyPage>
           ),
           const SizedBox(height: 8),
           Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
+  label,
+  textAlign: TextAlign.center,
+  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+  maxLines: 2, 
+  overflow: TextOverflow.ellipsis, 
+)
+
         ],
       ),
     );
@@ -981,9 +1027,15 @@ class _FormSurveyPageState extends State<FormSurveyPage>
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              _selectedLocationItem,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Flexible(
+              child: Text(
+                _selectedLocationItem,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                softWrap: true,
+              ),
             ),
           ],
         ),
@@ -1007,13 +1059,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
               });
             },
             items:
-                <String>[
-                  'Foto Selfie',
-                  'Foto Tampak Depan',
-                  'Foto Tampak Samping',
-                  'Foto Jalan',
-                  'Foto Lingkungan',
-                ].map<DropdownMenuItem<String>>((String value) {
+                _photoTitles.map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -1046,42 +1092,20 @@ class _FormSurveyPageState extends State<FormSurveyPage>
         Center(
           child: ElevatedButton(
             onPressed: () async {
-              String imageBase64 = "";
+              String? imageBase64 = surveyPhotos[_selectedLocationItem] ?? "";
 
-              switch (_selectedLocationItem) {
-                case "Foto Selfie":
-                  imageBase64 = _imageSelfieBase64 ?? "";
-                  break;
-                case "Foto Tampak Depan":
-                  imageBase64 = _imageTampakDepanBase64 ?? "";
-                  break;
-                case "Foto Tampak Samping":
-                  imageBase64 = _imageTampakSampingBase64 ?? "";
-                  break;
-                case "Foto Jalan":
-                  imageBase64 = _imageJalanBase64 ?? "";
-                  break;
-                case "Foto Lingkungan":
-                  imageBase64 = _imageLingkunganBase64 ?? "";
-                  break;
-                case "Titik Koordinat":
-                  imageBase64 = _imageTitikKoordinatBase64 ?? "";
-                  break;
-                default:
-                  imageBase64 = "";
-              }
-              if (_selectedLocationItem != "Titik Koordinat") {
+              if (_selectedLocationItem == "Titik Koordinat") {
+                await _addCoordinate(
+                  widget.task.projectID.toString(),
+                  _latitude,
+                  _longitude,
+                );
+              } else {
                 await _addPhoto(
                   widget.task.projectID.toString(),
                   _selectedLocationItem,
                   imageBase64,
                   "$_latitude, $_longitude",
-                );
-              } else {
-                await _addCoordinate(
-                  widget.task.projectID.toString(),
-                  _latitude,
-                  _longitude,
                 );
               }
             },
@@ -1094,28 +1118,8 @@ class _FormSurveyPageState extends State<FormSurveyPage>
   }
 
   Widget _buildImagePlaceholder() {
-    File? selectedImage;
-
-    switch (_selectedLocationItem) {
-      case "Foto Selfie":
-        selectedImage = _imageSelfie;
-        break;
-      case "Foto Tampak Depan":
-        selectedImage = _imageTampakDepan;
-        break;
-      case "Foto Tampak Samping":
-        selectedImage = _imageTampakSamping;
-        break;
-      case "Foto Jalan":
-        selectedImage = _imageJalan;
-        break;
-      case "Foto Lingkungan":
-        selectedImage = _imageLingkungan;
-        break;
-      case "Titik Koordinat":
-        selectedImage = _imageTitikKoordinat;
-        break;
-    }
+    final String? base64Photo = surveyPhotos[_selectedLocationItem];
+    final File? selectedImage = _imageFiles[_selectedLocationItem];
 
     return Container(
       width: double.infinity,
@@ -1123,15 +1127,20 @@ class _FormSurveyPageState extends State<FormSurveyPage>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         image:
-            selectedImage != null
+            base64Photo != null || selectedImage != null
                 ? DecorationImage(
-                  image: FileImage(selectedImage),
+                  image:
+                      base64Photo != null
+                          ? MemoryImage(
+                            base64Decode(surveyPhotos[_selectedLocationItem]!),
+                          )
+                          : FileImage(selectedImage!),
                   fit: BoxFit.contain,
                 )
                 : null,
       ),
       child:
-          selectedImage == null
+          base64Photo == null && selectedImage == null
               ? Container(
                 width: 150,
                 height: 150,
