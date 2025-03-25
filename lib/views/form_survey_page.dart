@@ -728,32 +728,6 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                       )
                       .toList(),
                 ],
-
-                // _buildLocationItem(
-                //   icon: Icons.camera_alt,
-                //   label: "Foto Selfie",
-                //   color: Colors.orange,
-                // ),
-                // _buildLocationItem(
-                //   icon: Icons.image,
-                //   label: "Foto Tampak Depan",
-                //   color: Colors.blue,
-                // ),
-                // _buildLocationItem(
-                //   icon: Icons.image_outlined,
-                //   label: "Foto Tampak Samping",
-                //   color: Colors.purple,
-                // ),
-                // _buildLocationItem(
-                //   icon: Icons.directions_walk,
-                //   label: "Foto Jalan",
-                //   color: Colors.lightBlue,
-                // ),
-                // _buildLocationItem(
-                //   icon: Icons.landscape,
-                //   label: "Foto Lingkungan",
-                //   color: Colors.pink,
-                // ),
               ),
             ],
           ),
