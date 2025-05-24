@@ -17,11 +17,20 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final LoginViewModel loginViewModel = LoginViewModel();
+  bool rememberMe = false;
 
   void handleLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', emailController.text); 
-    
+    await prefs.setString('email', emailController.text);
+
+    if (rememberMe) {
+      await prefs.setString('password', passwordController.text);
+      await prefs.setBool('rememberMe', true);
+    } else {
+      await prefs.remove('password');
+      await prefs.setBool('rememberMe', false);
+    }
+
     final result = await loginViewModel.login(
       emailController.text,
       passwordController.text,
@@ -52,10 +61,15 @@ class _LoginPageState extends State<LoginPage> {
 
   void _loadEmail() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
-    String email = sp.getString('email')??'';
-    if (email != null) {
-      emailController.text = email; // Set the saved email in the email field
-    }
+    String email = sp.getString('email') ?? '';
+    String password = sp.getString('password') ?? '';
+    bool savedRememberMe = sp.getBool('rememberMe') ?? false;
+
+    setState(() {
+      emailController.text = email;
+      passwordController.text = password;
+      rememberMe = savedRememberMe;
+    });
   }
 
   @override
@@ -73,7 +87,9 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ClipOval(child:Image.asset("assets/images/logo.png", height: 100)),
+              ClipOval(
+                child: Image.asset("assets/images/logo.png", height: 100),
+              ),
               const SizedBox(height: 30),
 
               TextFormField(
@@ -101,9 +117,22 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 autofillHints: const [AutofillHints.password],
               ),
-
-              const SizedBox(height: 30),
-
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: rememberMe,
+                    onChanged: (value) {
+                      setState(() {
+                        rememberMe = value!;
+                      });
+                    },
+                  ),
+                  const Text("Remember Password"),
+                ],
+              ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: handleLogin,
                 style: ElevatedButton.styleFrom(

@@ -748,7 +748,10 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                 return;
               }
               setState(() {
-                _selectedLocationItem = _photoTitles.isNotEmpty ? _photoTitles.first : "Titik Koordinat";
+                _selectedLocationItem =
+                    _photoTitles.isNotEmpty
+                        ? _photoTitles.first
+                        : "Titik Koordinat";
                 _isDetailVisible = true;
               });
             },
@@ -853,13 +856,12 @@ class _FormSurveyPageState extends State<FormSurveyPage>
           ),
           const SizedBox(height: 8),
           Text(
-  label,
-  textAlign: TextAlign.center,
-  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-  maxLines: 2, 
-  overflow: TextOverflow.ellipsis, 
-)
-
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
@@ -1095,39 +1097,43 @@ class _FormSurveyPageState extends State<FormSurveyPage>
     final String? base64Photo = surveyPhotos[_selectedLocationItem];
     final File? selectedImage = _imageFiles[_selectedLocationItem];
 
-    return Container(
-      width: double.infinity,
-      height: 300,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        image:
-            base64Photo != null || selectedImage != null
-                ? DecorationImage(
-                  image:
-                      base64Photo != null
-                          ? MemoryImage(
-                            base64Decode(surveyPhotos[_selectedLocationItem]!),
-                          )
-                          : FileImage(selectedImage!),
-                  fit: BoxFit.contain,
+    return Center(
+      child: Container(
+        width: 200,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          image:
+              base64Photo != null || selectedImage != null
+                  ? DecorationImage(
+                    image:
+                        base64Photo != null
+                            ? MemoryImage(
+                              base64Decode(
+                                surveyPhotos[_selectedLocationItem]!,
+                              ),
+                            )
+                            : FileImage(selectedImage!),
+                    fit: BoxFit.contain,
+                  )
+                  : null,
+        ),
+        child:
+            base64Photo == null && selectedImage == null
+                ? Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey, width: 2),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.home, size: 80, color: Colors.grey),
+                  ),
                 )
                 : null,
       ),
-      child:
-          base64Photo == null && selectedImage == null
-              ? Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.grey, width: 2),
-                ),
-                child: const Center(
-                  child: Icon(Icons.home, size: 80, color: Colors.grey),
-                ),
-              )
-              : null,
     );
   }
 }

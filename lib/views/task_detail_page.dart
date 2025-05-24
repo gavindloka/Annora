@@ -23,9 +23,9 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   WO? woData;
   bool isLoading = true;
   String errorMsg = '';
-   List<Notif> notifications = [];
+  List<Notif> notifications = [];
 
- Future<void> fetchNotifications() async {
+  Future<void> fetchNotifications() async {
     final result = await NotifViewModel().getNotifications(widget.user.email);
     if (result['success']) {
       setState(() {
@@ -33,6 +33,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       });
     }
   }
+
   Future<void> fetchWO() async {
     final result = await WOViewModel().getWO(widget.task.woID.toString());
     if (result['success']) {
@@ -84,91 +85,89 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         ),
         actions: [
           Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  PopupMenuButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      size: 30,
-                      color: Colors.amber,
-                    ),
-                    itemBuilder: (context) {
-                      if (isLoading) {
-                        return [
-                          const PopupMenuItem(
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
-                        ];
-                      }
-                      if (notifications.isEmpty) {
-                        return [
-                          const PopupMenuItem(
-                            child: Text("No new notifications"),
-                          ),
-                        ];
-                      }
-                      return notifications.map((notif) {
-                        bool isUnread = notif.status == "unread";
+            clipBehavior: Clip.none,
+            children: [
+              PopupMenuButton(
+                icon: const Icon(
+                  Icons.notifications,
+                  size: 30,
+                  color: Colors.amber,
+                ),
+                itemBuilder: (context) {
+                  if (isLoading) {
+                    return [
+                      const PopupMenuItem(
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    ];
+                  }
+                  if (notifications.isEmpty) {
+                    return [
+                      const PopupMenuItem(child: Text("No new notifications")),
+                    ];
+                  }
+                  return notifications.map((notif) {
+                    bool isUnread = notif.status == "unread";
 
-                        return PopupMenuItem(
-                          child: ListTile(
-                            leading: Icon(
-                              isUnread
-                                  ? Icons.notifications_active
-                                  : Icons.notifications_none,
-                              color: isUnread ? Colors.orange : Colors.grey,
-                            ),
-                            title: Text(
-                              notif.notification,
-                              style: TextStyle(
-                                fontWeight:
-                                    isUnread ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                            subtitle: Text(
-                              DateFormat('dd MMM yyyy, HH:mm').format(notif.date),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
+                    return PopupMenuItem(
+                      child: ListTile(
+                        leading: Icon(
+                          isUnread
+                              ? Icons.notifications_active
+                              : Icons.notifications_none,
+                          color: isUnread ? Colors.orange : Colors.grey,
+                        ),
+                        title: Text(
+                          notif.notification,
+                          style: TextStyle(
+                            fontWeight:
+                                isUnread ? FontWeight.bold : FontWeight.normal,
                           ),
-                        );
-                      }).toList();
-                    },
-                  ),
-                  if (unreadCount > 0)
-                    Positioned(
-                      right: 5,
-                      top: -2,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
                         ),
-                        constraints: const BoxConstraints(
-                          minWidth: 8,
-                          minHeight: 8,
-                        ),
-                        child: Text(
-                          unreadCount.toString(),
+                        subtitle: Text(
+                          DateFormat('dd MMM yyyy, HH:mm').format(notif.date),
                           style: const TextStyle(
-                            color: Colors.white,
                             fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
                           ),
-                          textAlign: TextAlign.center,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
                         ),
                       ),
-                    ),
-                ],
+                    );
+                  }).toList();
+                },
               ),
-             ],
+              if (unreadCount > 0)
+                Positioned(
+                  right: 5,
+                  top: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 8,
+                      minHeight: 8,
+                    ),
+                    child: Text(
+                      unreadCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -244,64 +243,45 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             ] else if (errorMsg.isNotEmpty) ...[
               Text('Error: $errorMsg', style: TextStyle(color: Colors.red)),
             ],
-          ],
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SizedBox(
-          width: double.infinity,
-          child:
-              widget.task.statusSurveyor == 'Uploading Task'
-                  ? ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => SurveyResultPage(task: widget.task, user: widget.user),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Survey Result",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  )
-                  : ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => FormSurveyPage(
-                                task: widget.task,
-                                user: widget.user,
-                              ),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Process Survey",
-                      style: TextStyle(color: Colors.white),
-                    ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              widget.task.statusSurveyor == 'Uploading Task'
+                                  ? SurveyResultPage(
+                                    task: widget.task,
+                                    user: widget.user,
+                                  )
+                                  : FormSurveyPage(
+                                    task: widget.task,
+                                    user: widget.user,
+                                  ),
+                    ),
+                  );
+                },
+                child: Text(
+                  widget.task.statusSurveyor == 'Uploading Task'
+                      ? "Survey Result"
+                      : "Process Survey",
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
