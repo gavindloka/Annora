@@ -169,7 +169,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,19 +188,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                 children: [
                   Text(
                     "Start Date : ${widget.task.startDate.toString().substring(0, widget.task.startDate.toString().indexOf(' '))}",
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   Text(
                     "Target Date : ${widget.task.targetDate.toString().substring(0, widget.task.targetDate.toString().indexOf(' '))}",
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   Text(
                     "Nama Client : ${widget.task.company}",
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   Text(
                     "App No : ${widget.task.appNo}",
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ],
               ),
@@ -211,7 +211,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-
             if (isLoading)
               const Center(child: CircularProgressIndicator())
             else if (woData != null) ...[
@@ -241,7 +240,10 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               const SizedBox(height: 6),
               buildDetailRow("Nama Pasangan", woData!.namaPasangan),
             ] else if (errorMsg.isNotEmpty) ...[
-              Text('Error: $errorMsg', style: TextStyle(color: Colors.red)),
+              Text(
+                'Error: $errorMsg',
+                style: const TextStyle(color: Colors.red),
+              ),
             ],
             const SizedBox(height: 20),
             SizedBox(

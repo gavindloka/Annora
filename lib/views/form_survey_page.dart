@@ -891,6 +891,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                     child: TextField(
                       decoration: InputDecoration(
                         labelText: question.question,
+                        labelStyle: const TextStyle(fontSize: 14),
                         border: OutlineInputBorder(),
                       ),
                       onChanged: (value) {
@@ -904,6 +905,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                     child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         labelText: question.question,
+                        labelStyle: const TextStyle(fontSize: 14),
                         border: OutlineInputBorder(),
                       ),
                       items:
@@ -911,7 +913,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                               .map(
                                 (option) => DropdownMenuItem(
                                   value: option.label,
-                                  child: Text(option.label),
+                                  child: Text(option.label, style: TextStyle(fontSize: 12),),
                                 ),
                               )
                               .toList(),
@@ -929,7 +931,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                         Text(
                           question.question,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -949,7 +951,7 @@ class _FormSurveyPageState extends State<FormSurveyPage>
                                         });
                                       },
                                     ),
-                                    Text(option.label),
+                                    Text(option.label, style: const TextStyle(fontSize: 12),),
                                   ],
                                 ),
                               );
